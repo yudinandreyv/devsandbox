@@ -1,0 +1,9 @@
+# DevSandbox Robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /docs
+Disallow: /redoc
+Disallow: /openapi.json
+
+Sitemap: https://sandbox.gateaway.cloud/sitemap.xml

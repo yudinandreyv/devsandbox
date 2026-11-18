@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Sandbox Database
+  db:
+    image: postgres:16-alpine
+    container_name: devsandbox-db
+    environment:
+      POSTGRES_DB: sandbox_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set POSTGRES_ADMIN_PASSWORD in .env}
+      SANDBOX_READONLY_PASSWORD: ${SANDBOX_READONLY_PASSWORD:?Set SANDBOX_READONLY_PASSWORD in .env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init-sandbox-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sandbox_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  # 2. Redis for SlowAPI rate limiting & plan caching
+  redis:
+    image: redis:7-alpine
+    container_name: devsandbox-redis
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # 3. FastAPI API Service
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devsandbox-api
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+      SITE_DOMAIN: localhost:5173
+      DATABASE_READONLY_URL: ${DATABASE_READONLY_URL:?Set DATABASE_READONLY_URL in .env}
+      DB_STATEMENT_TIMEOUT_MS: 1500
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+
+  # 4. Frontend Web Service (React + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devsandbox-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+volumes:
+  pgdata:
