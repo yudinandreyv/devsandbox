@@ -32,9 +32,17 @@ async def test_list_scenarios():
     assert r.status_code == 200
     data = r.json()
     assert isinstance(data, list)
-    assert len(data) >= 4
+    assert len(data) >= 7
     ids = {s["id"] for s in data}
-    assert {"canary_10", "50_50", "full_cutover", "rollback"}.issubset(ids)
+    assert {
+        "canary_10",
+        "50_50",
+        "full_cutover",
+        "rollback",
+        "bad_gateway_502",
+        "drain_connections",
+        "auto_rollback",
+    }.issubset(ids)
     for s in data:
         assert "label_en" in s
         assert "label_ru" in s
@@ -163,3 +171,47 @@ async def test_topology_gateway_no_pii():
         r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.I
     )
     assert not uuid_re.search(text), "Response must not contain UUID-shaped values"
+
+
+@pytest.mark.asyncio
+async def test_bad_gateway_502_dropped_packets():
+    """Under 502/504 scenario, gateway dropped packets must reflect upstream failure."""
+    async with await _client() as client:
+        r = await client.post(
+            f"{BASE}/shift",
+            json={"blue_weight": 50, "scenario": "bad_gateway_502"},
+        )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["dropped_packets"] > 0
+    assert data["shift_safe"] is False
+    assert "502/504" in data["insight"]
+
+
+@pytest.mark.asyncio
+async def test_drain_connections_terminating():
+    """Under graceful drain scenario, blue pods are marked Terminating."""
+    async with await _client() as client:
+        r = await client.post(
+            f"{BASE}/shift",
+            json={"blue_weight": 0, "scenario": "drain_connections"},
+        )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["blue"]["pods"][0]["status"] == "Terminating"
+    assert "ДРЕНАЖ" in data["insight"] or "DRAIN" in data["insight"].upper()
+
+
+@pytest.mark.asyncio
+async def test_auto_rollback_triggers():
+    """Auto rollback scenario enforces 100% blue weight upon error detection."""
+    async with await _client() as client:
+        r = await client.post(
+            f"{BASE}/shift",
+            json={"blue_weight": 40, "scenario": "auto_rollback"},
+        )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["new_blue_weight"] == 100
+    assert data["new_green_weight"] == 0
+    assert "АВТООТКАТ" in data["insight"]

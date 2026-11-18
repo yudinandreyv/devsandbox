@@ -143,10 +143,34 @@ SCENARIOS: Dict[str, ScenarioInfo] = {
     ),
     "rollback": ScenarioInfo(
         id="rollback",
-        label_en="Rollback",
-        label_ru="Откат",
+        label_en="Manual Rollback",
+        label_ru="Ручной откат",
         description_en="Green is CrashLooping — trigger an emergency rollback to blue.",
         description_ru="Green падает в CrashLoop — экстренный откат на blue.",
+        initial_blue_weight=100,
+    ),
+    "bad_gateway_502": ScenarioInfo(
+        id="bad_gateway_502",
+        label_en="502/504 Bad Gateway",
+        label_ru="502/504 Bad Gateway",
+        description_en="Broken upstream on Green causing connection drops and 502/504 timeouts at NGINX Gateway.",
+        description_ru="Сломанный апстрим на Green: сбросы соединений, таймауты 502/504 на NGINX шлюзе.",
+        initial_blue_weight=70,
+    ),
+    "drain_connections": ScenarioInfo(
+        id="drain_connections",
+        label_en="Graceful Drain",
+        label_ru="Дренаж соединений (Graceful)",
+        description_en="Blue pods entering Terminating status with preStop hook draining in-flight HTTP requests.",
+        description_ru="Поды Blue переходят в Terminating с хуком preStop, плавно дорабатывая активные HTTP-запросы.",
+        initial_blue_weight=0,
+    ),
+    "auto_rollback": ScenarioInfo(
+        id="auto_rollback",
+        label_en="Automated Circuit Rollback",
+        label_ru="Автооткат по порогу ошибок",
+        description_en="Canary shift to Green fails health check threshold (>5% 5xx errors) triggering automatic rollback.",
+        description_ru="Канареечный трафик на Green превышает порог ошибок (>5% 5xx), шлюз автоматически возвращает 100% Blue.",
         initial_blue_weight=100,
     ),
 }
@@ -166,7 +190,25 @@ def _jitter(base: float, pct: float = 0.12) -> float:
     return round(base * (1 + _RNG.uniform(-pct, pct)), 2)
 
 
-def _make_pod(pod_id: str, color: str, weight: int, crashloop: bool = False) -> PodHealth:
+def _make_pod(
+    pod_id: str,
+    color: str,
+    weight: int,
+    crashloop: bool = False,
+    terminating: bool = False,
+    bad_gateway: bool = False,
+) -> PodHealth:
+    if terminating:
+        return PodHealth(
+            pod_id=pod_id,
+            status="Terminating",
+            ready=False,
+            cpu_percent=_jitter(8),
+            memory_mb=_jitter(95),
+            p99_latency_ms=_jitter(120),
+            rps=_jitter(15),  # draining in-flight requests
+            errors_per_min=0,
+        )
     if crashloop:
         return PodHealth(
             pod_id=pod_id,
@@ -177,6 +219,17 @@ def _make_pod(pod_id: str, color: str, weight: int, crashloop: bool = False) -> 
             p99_latency_ms=0,
             rps=0,
             errors_per_min=_jitter(120),
+        )
+    if bad_gateway:
+        return PodHealth(
+            pod_id=pod_id,
+            status="Running",
+            ready=False,
+            cpu_percent=_jitter(92),
+            memory_mb=_jitter(480),
+            p99_latency_ms=_jitter(1500),  # 1.5s timeout
+            rps=_jitter(30),
+            errors_per_min=_jitter(380),  # 502 Bad Gateway bursts
         )
     if weight == 0:
         # idle / warm standby
@@ -210,16 +263,25 @@ def _make_slot(
     version: str,
     replicas: int = 3,
     crashloop: bool = False,
+    terminating: bool = False,
+    bad_gateway: bool = False,
 ) -> DeploymentSlot:
     pods = [
-        _make_pod(f"{color}-{i}", color, weight, crashloop and i == 0)
+        _make_pod(
+            f"{color}-{i}",
+            color,
+            weight,
+            crashloop=crashloop and i == 0,
+            terminating=terminating,
+            bad_gateway=bad_gateway and i >= 1,
+        )
         for i in range(replicas)
     ]
     healthy = sum(1 for p in pods if p.ready)
     total_rps = sum(p.rps for p in pods)
     avg_lat = (
         sum(p.p99_latency_ms for p in pods if p.ready) / max(healthy, 1)
-        if healthy else 0
+        if healthy else (sum(p.p99_latency_ms for p in pods) / max(len(pods), 1))
     )
     err_rate = (
         sum(p.errors_per_min for p in pods) / max(total_rps * 60, 1) * 100
@@ -237,56 +299,86 @@ def _make_slot(
     )
 
 
-def _gateway(blue_weight: int, blue: DeploymentSlot, green: DeploymentSlot) -> GatewayState:
+def _gateway(
+    blue_weight: int,
+    blue: DeploymentSlot,
+    green: DeploymentSlot,
+    scenario: str = "",
+) -> GatewayState:
     total_rps = blue.total_rps + green.total_rps
     p99 = (
         (blue.avg_latency_ms * blue.total_rps + green.avg_latency_ms * green.total_rps)
         / max(total_rps, 1)
     )
+    dropped = 0
+    if scenario == "bad_gateway_502" and (100 - blue_weight) > 0:
+        dropped = int(round(_jitter(45 * (100 - blue_weight) / 100)))
+
     return GatewayState(
         algorithm="round_robin",
         sticky_sessions=False,
         health_check_interval_s=5,
         total_rps=round(total_rps, 2),
         p99_latency_ms=round(p99, 2),
-        dropped_packets=0,  # always 0 on a proper shift — CLS=0 for ops
+        dropped_packets=dropped,
     )
 
 
 def _insight(scenario: str, blue_weight: int) -> str:
     green_weight = 100 - blue_weight
+    if scenario == "bad_gateway_502":
+        return (
+            f"⚠️ КРИТИЧЕСКИЙ СБОЙ: Апстрим Green вернул 502/504 Bad Gateway! "
+            f"На шлюзе зафиксировано сброшенных запросов. Требуется немедленный Rollback на Blue!"
+        )
+    if scenario == "drain_connections":
+        return (
+            "🔄 ПЛАВНЫЙ ДРЕНАЖ: Blue поды в статусе Terminating безопасно завершают активные сокеты. "
+            "Новые запросы направляются только на Green. Нулевой 502 downtime!"
+        )
+    if scenario == "auto_rollback":
+        return (
+            "🛡️ АВТООТКАТ: Circuit Breaker сработал при превышении лимита 5xx ошибок. "
+            "Шлюз в течение 300мс вернул 100% трафика на проверенный слот Blue."
+        )
     if scenario == "rollback":
         return (
-            "Emergency rollback: 100 % of traffic returned to blue. "
-            "Green pods stay Running so a re-deploy takes seconds, not minutes."
+            "Экстренный откат: 100 % трафика возвращено на слот Blue. "
+            "Green поды изолированы для анализа логов и дампа памяти."
         )
     if green_weight == 0:
         return (
-            "Green is idle (warm standby). Blue handles all traffic. "
-            "To start a canary shift, raise green's weight to 10."
+            "Green находится в режиме тёплого ожидания (warm standby). Blue обрабатывает 100% запросов."
         )
     if green_weight <= 15:
         return (
-            f"Canary phase: {green_weight} % of users hit the new release. "
-            "Watch error_rate_percent and p99_latency_ms before widening the gate."
+            f"Канареечная фаза: {green_weight} % пользователей направлены на релиз Green. "
+            "Следите за error_rate_percent и p99_latency_ms перед расширением шлюза."
         )
     if green_weight < 100:
         return (
-            f"Progressive delivery: {green_weight} % on green, {blue_weight} % on blue. "
-            "Green's lower latency is already measurable in the gateway p99."
+            f"Прогрессивная доставка: {green_weight} % на Green, {blue_weight} % на Blue."
         )
     return (
-        "Full cutover complete. All traffic on green (new release). "
-        "Blue stays warm — a rollback is a single weight-shift away."
+        "Полный перенос завершен. 100 % трафика на Green. Blue готов к мгновенному откату."
     )
 
 
 def _build_topology(scenario: str, blue_weight: int) -> TopologySnapshot:
     green_weight = 100 - blue_weight
     crashloop = scenario == "rollback" and green_weight > 0 and blue_weight < 100
-    blue = _make_slot("blue", blue_weight, "v1.4.2")
-    green = _make_slot("green", green_weight, "v1.5.0", crashloop=crashloop)
-    gw = _gateway(blue_weight, blue, green)
+    terminating = scenario == "drain_connections" and blue_weight == 0
+    bad_gateway = scenario == "bad_gateway_502" and green_weight > 0
+
+    blue = _make_slot("blue", blue_weight, "v1.4.2", terminating=terminating)
+    green = _make_slot(
+        "green",
+        green_weight,
+        "v1.5.0",
+        crashloop=crashloop,
+        bad_gateway=bad_gateway,
+    )
+    gw = _gateway(blue_weight, blue, green, scenario=scenario)
     return TopologySnapshot(
         scenario=scenario,
         timestamp_ms=int(time.time() * 1000),
@@ -342,13 +434,20 @@ async def shift_traffic(
     await asyncio.sleep(_jitter(0.03, 0.4))
 
     new_blue = body.blue_weight
+    if scenario == "auto_rollback" and new_blue < 100:
+        # Auto-rollback triggers if Green is given traffic under error conditions
+        new_blue = 100
+
     _state[scenario] = {"blue_weight": new_blue}
 
     green_weight = 100 - new_blue
     crashloop = scenario == "rollback" and green_weight > 0 and new_blue < 100
-    blue = _make_slot("blue", new_blue, "v1.4.2")
-    green = _make_slot("green", green_weight, "v1.5.0", crashloop=crashloop)
-    gw = _gateway(new_blue, blue, green)
+    terminating = scenario == "drain_connections" and new_blue == 0
+    bad_gateway = scenario == "bad_gateway_502" and green_weight > 0
+
+    blue = _make_slot("blue", new_blue, "v1.4.2", terminating=terminating)
+    green = _make_slot("green", green_weight, "v1.5.0", crashloop=crashloop, bad_gateway=bad_gateway)
+    gw = _gateway(new_blue, blue, green, scenario=scenario)
 
     duration_ms = (time.perf_counter() - t0) * 1000
 
@@ -367,8 +466,8 @@ async def shift_traffic(
         previous_blue_weight=prev_blue,
         new_blue_weight=new_blue,
         new_green_weight=green_weight,
-        dropped_packets=0,
-        shift_safe=blue.healthy_replicas > 0 and (green.healthy_replicas > 0 or new_blue == 100),
+        dropped_packets=gw.dropped_packets,
+        shift_safe=blue.healthy_replicas > 0 and (green.healthy_replicas > 0 or new_blue == 100) and gw.dropped_packets == 0,
         gateway=gw,
         blue=blue,
         green=green,
