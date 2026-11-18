@@ -100,15 +100,17 @@ export const Navbar: React.FC = () => {
               </button>
             </div>
 
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Toggle Dark / Light Theme"
-              aria-label="Toggle Theme"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
+            {/* Theme Toggle: only visible on Home Page ('/') */}
+            {currentPath === '/' && (
+              <button
+                onClick={toggleTheme}
+                className="w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md bg-slate-200/50 dark:bg-slate-800/50 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 border border-slate-300/60 dark:border-slate-700/60 text-slate-700 dark:text-amber-300 transition-all duration-300 shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
+                title={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
+                aria-label="Toggle Theme"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4 transition-transform duration-300 rotate-0 hover:rotate-45" /> : <Moon className="w-4 h-4 transition-transform duration-300 -rotate-12 hover:rotate-0" />}
+              </button>
+            )}
 
             {/* Guest Session Button / Auth Stub */}
             <button

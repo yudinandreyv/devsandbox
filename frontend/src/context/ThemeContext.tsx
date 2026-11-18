@@ -14,10 +14,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem('dev_sandbox_theme');
     if (saved === 'light' || saved === 'dark') return saved;
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    return 'dark'; // Default to modern dark developer theme
+    // Default to light theme as requested
+    return 'light';
   });
 
   useEffect(() => {
