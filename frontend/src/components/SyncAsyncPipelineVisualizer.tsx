@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Square, Flame, RotateCcw, Activity, Zap, Server, Clock, Layers, ArrowRight } from 'lucide-react';
+import { Play, Flame, RotateCcw, Activity, Zap, Server, ArrowRight, Pause } from 'lucide-react';
+import { useI18n } from '../context/I18nContext';
 
 interface VisualizerProps {
   onRunBackendProbe?: (scenario: string, concurrency: number, delayMs: number) => Promise<any>;
@@ -27,6 +28,8 @@ interface PerformancePoint {
 }
 
 export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
+  const { locale } = useI18n();
+  const isRu = locale === 'ru';
   // Mode configuration
   const [mode, setMode] = useState<ExecutionMode>('sync');
   const [trafficProfile, setTrafficProfile] = useState<TrafficProfile>('steady');
@@ -50,36 +53,6 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
   const queueMaxCapacity = workerCount * 4; // Bounded backlog: Gunicorn/Uvicorn backlog
   const nextIdRef = useRef<number>(1);
   const chartCanvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  // Preset scenarios
-  const applyPreset = (presetName: string) => {
-    switch (presetName) {
-      case 'light':
-        setMode('sync');
-        setConcurrency(8);
-        setIoDelayMs(50);
-        setIsBrokenEventLoop(false);
-        break;
-      case 'production':
-        setMode('sync');
-        setConcurrency(24);
-        setIoDelayMs(160);
-        setIsBrokenEventLoop(false);
-        break;
-      case 'async_optimal':
-        setMode('async');
-        setConcurrency(40);
-        setIoDelayMs(160);
-        setIsBrokenEventLoop(false);
-        break;
-      case 'broken_async':
-        setMode('async');
-        setConcurrency(30);
-        setIoDelayMs(200);
-        setIsBrokenEventLoop(true);
-        break;
-    }
-  };
 
   // Reset counters
   const handleReset = () => {
@@ -255,14 +228,25 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
     ctx.fillStyle = '#090d16';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw horizontal grid lines
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 1;
-    for (let y = 20; y < height; y += 30) {
+    // Explicit latency scale and recent time marks.
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'left';
+    [0, 200, 400, 600].forEach((value) => {
+      const y = height - 18 - (value / 600) * (height - 30);
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(0, y);
+      ctx.moveTo(42, y);
       ctx.lineTo(width, y);
       ctx.stroke();
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(String(value), 6, y + 3);
+    });
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= 4; i += 1) {
+      const x = 42 + ((width - 42) * i) / 4;
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(i === 4 ? (isRu ? 'сейчас' : 'now') : '−' + (4 - i) + 's', x, height - 2);
     }
 
     if (history.length < 2) {
@@ -272,19 +256,23 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
       return;
     }
 
-    const stepX = width / Math.max(10, history.length - 1);
+    const plotBottom = height - 18;
+    const plotHeight = height - 30;
+    const plotWidth = width - 42;
+    const scaleY = (value: number, max: number) => plotBottom - Math.min(1, Math.max(0, value / max)) * plotHeight;
+    const stepX = plotWidth / Math.max(10, history.length - 1);
 
     // 1. Draw Latency Area (Amber / Red)
     ctx.beginPath();
-    ctx.moveTo(0, height);
+    ctx.moveTo(42, plotBottom);
     history.forEach((pt, i) => {
-      const x = i * stepX;
+      const x = 42 + i * stepX;
       // Latency scale: 0 - 600ms
-      const y = height - Math.min(height - 10, (pt.latencyMs / 600) * (height - 20));
+      const y = scaleY(pt.latencyMs, 600);
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
-    ctx.lineTo((history.length - 1) * stepX, height);
+    ctx.lineTo(42 + (history.length - 1) * stepX, plotBottom);
     ctx.closePath();
     ctx.fillStyle = isBrokenEventLoop ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.12)';
     ctx.fill();
@@ -292,8 +280,8 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
     // 2. Draw Latency Line
     ctx.beginPath();
     history.forEach((pt, i) => {
-      const x = i * stepX;
-      const y = height - Math.min(height - 10, (pt.latencyMs / 600) * (height - 20));
+      const x = 42 + i * stepX;
+      const y = scaleY(pt.latencyMs, 600);
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -301,12 +289,12 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 3. Draw Throughput (RPS) Line (Cyan / Emerald)
+    // 3. Draw {isRu ? "Пропускная способность" : "Throughput"} · 0–250 req/s Line (Cyan / Emerald)
     ctx.beginPath();
     history.forEach((pt, i) => {
-      const x = i * stepX;
+      const x = 42 + i * stepX;
       // RPS scale: 0 - 250 RPS
-      const y = height - Math.min(height - 10, (pt.rps / 250) * (height - 20));
+      const y = scaleY(pt.rps, 250);
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -318,8 +306,8 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
     if (mode === 'async') {
       ctx.beginPath();
       history.forEach((pt, i) => {
-        const x = i * stepX;
-        const y = height - Math.min(height - 10, (pt.eventLoopLagMs / 500) * (height - 20));
+        const x = 42 + i * stepX;
+        const y = scaleY(pt.eventLoopLagMs, 500);
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
@@ -347,7 +335,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
             <span className="text-slate-500 text-xs font-mono">v1.2.0</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            <span>Анатомия потока: Воркеры, Очередь и Event Loop в реальном времени</span>
+            <span>Sync vs Async: как запрос проходит через сервер</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mt-1 leading-relaxed">
             Наглядная визуализация физических процессов сервера под нагрузкой. Посмотрите, как ведут себя 
@@ -367,348 +355,174 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
         </div>
       </div>
 
-      {/* SECTION 2: ARCHITECTURE MODE TOGGLE & PRESET STRIP */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Mode Switcher Buttons */}
-          <div className="flex items-center gap-2 p-1.5 bg-slate-950 rounded-xl border border-slate-800 w-fit">
-            <button
-              onClick={() => { setMode('sync'); setIsBrokenEventLoop(false); }}
-              className={`px-4 py-2 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-2 cursor-pointer ${
-                mode === 'sync'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Server className="w-4 h-4 text-amber-400" />
-              <span>SYNC ARCHITECTURE (Gunicorn, 4 workers)</span>
-            </button>
 
-            <button
-              onClick={() => setMode('async')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-2 cursor-pointer ${
-                mode === 'async'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Zap className="w-4 h-4 text-cyan-400" />
-              <span>ASYNC ARCHITECTURE (Uvicorn / Event Loop)</span>
-            </button>
+      {/* One settings panel and one live pipeline */}
+      <div className="grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)] gap-4">
+        <aside className="rounded-2xl border border-slate-700/80 bg-slate-900/55 backdrop-blur-sm p-4 sm:p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white">{isRu ? 'Настройки опыта' : 'Experiment settings'}</h3>
+            <span className={'text-[10px] font-mono px-2 py-1 rounded-full ' + (isRunning ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-800 text-slate-400')}>
+              {isRunning ? (isRu ? 'ИДЁТ' : 'RUNNING') : (isRu ? 'ПАУЗА' : 'PAUSED')}
+            </span>
           </div>
-
-          {/* Load Profiles */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-slate-400 font-medium mr-1 hidden sm:inline">Профиль нагрузки:</span>
-            {(['steady', 'ramp', 'burst'] as TrafficProfile[]).map((p) => (
-              <button
-                key={p}
-                onClick={() => setTrafficProfile(p)}
-                className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition-colors ${
-                  trafficProfile === p
-                    ? 'bg-slate-800 text-white border border-slate-700'
-                    : 'text-slate-500 hover:text-slate-300'
-                }`}
-              >
-                {p === 'steady' ? 'Ровный' : p === 'ramp' ? 'Разгон' : 'Пики'}
+          <div className="space-y-2">
+            <div className="text-[10px] font-mono uppercase tracking-wide text-slate-500">{isRu ? 'Модель выполнения' : 'Execution model'}</div>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => { setMode('sync'); setIsBrokenEventLoop(false); }}
+                title={isRu ? 'Один worker выполняет один запрос за раз' : 'Each worker handles one request at a time'}
+                className={'rounded-lg border px-2 py-2 text-[11px] font-semibold transition-colors ' + (mode === 'sync' ? 'border-amber-400/60 bg-amber-500/15 text-amber-200' : 'border-slate-700 bg-slate-950/50 text-slate-400 hover:text-slate-200')}>
+                <Server className="w-3.5 h-3.5 mx-auto mb-1" />Sync · 4
               </button>
-            ))}
+              <button type="button" onClick={() => setMode('async')}
+                title={isRu ? 'await освобождает цикл событий на время I/O' : 'await lets the event loop handle other I/O tasks'}
+                className={'rounded-lg border px-2 py-2 text-[11px] font-semibold transition-colors ' + (mode === 'async' ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200' : 'border-slate-700 bg-slate-950/50 text-slate-400 hover:text-slate-200')}>
+                <Zap className="w-3.5 h-3.5 mx-auto mb-1" />Async · I/O
+              </button>
+            </div>
+            <p className="text-[10px] leading-relaxed text-slate-500">
+              {mode === 'sync' ? (isRu ? 'Занятый worker ждёт завершения запроса.' : 'A busy worker waits for its request to finish.') : (isRu ? 'На await Event Loop запускает другие корутины.' : 'At await, the event loop runs other coroutines.')}
+            </p>
           </div>
-        </div>
-
-        {/* One-Click Production Presets */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80 text-xs">
-          <span className="text-slate-500 font-mono text-[11px]">Готовые кейсы:</span>
-          <button
-            onClick={() => applyPreset('light')}
-            className="px-2.5 py-1 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition-colors cursor-pointer"
-          >
-            1. Легкая нагрузка (8 req)
-          </button>
-          <button
-            onClick={() => applyPreset('production')}
-            className="px-2.5 py-1 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium transition-colors cursor-pointer"
-          >
-            2. Обычный рабочий день (24 req)
-          </button>
-          <button
-            onClick={() => applyPreset('async_optimal')}
-            className="px-2.5 py-1 rounded-md bg-cyan-950/60 border border-cyan-900/80 hover:bg-cyan-900/40 text-cyan-300 font-medium transition-colors cursor-pointer"
-          >
-            3. Тот же трафик на Async
-          </button>
-          <button
-            onClick={() => applyPreset('broken_async')}
-            className="px-2.5 py-1 rounded-md bg-red-950/60 border border-red-900/80 hover:bg-red-900/40 text-red-300 font-medium transition-colors cursor-pointer"
-          >
-            4. 💥 Async со скрытым time.sleep()
-          </button>
-        </div>
-      </div>
-
-      {/* SECTION 3: ANIMATED PHYSICAL PIPELINE STAGE (DIVIDED SPACE) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* STAGE 1: INGRESS & CONCURRENCY (3 Cols) */}
-        <div className="lg:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono font-bold uppercase text-slate-400">1. Входящий поток</span>
-              <span className="text-cyan-400 font-mono text-xs font-bold">{concurrency} rps</span>
+          <div className="space-y-2 border-t border-slate-800 pt-3">
+            <div className="flex justify-between text-[11px] font-medium">
+              <label htmlFor="traffic-rate" className="text-slate-300">{isRu ? 'Входящая нагрузка' : 'Incoming load'}</label>
+              <span className="font-mono text-cyan-300">{concurrency} req/s</span>
             </div>
-            <div className="text-[11px] text-slate-500 mb-3">
-              Одновременные подключения пользователей, бьющие в HTTP endpoint.
-            </div>
-
-            {/* Slider */}
-            <div className="space-y-1.5">
-              <input
-                type="range"
-                min="4"
-                max="60"
-                step="2"
-                value={concurrency}
-                onChange={(e) => setConcurrency(Number(e.target.value))}
-                className="w-full accent-cyan-500 cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] font-mono text-slate-500">
-                <span>4 conn</span>
-                <span>30 conn</span>
-                <span>60 conn</span>
-              </div>
-            </div>
+            <input id="traffic-rate" aria-label={isRu ? 'Входящие запросы в секунду' : 'Incoming requests per second'} type="range" min="4" max="60" step="2" value={concurrency} onChange={(e) => setConcurrency(Number(e.target.value))} className="w-full accent-cyan-400 cursor-pointer" />
+            <p className="text-[10px] text-slate-500">{isRu ? 'Сколько запросов поступает каждую секунду.' : 'Requests entering the system each second.'}</p>
           </div>
-
-          {/* I/O Latency slider */}
-          <div className="pt-3 border-t border-slate-800">
-            <div className="flex justify-between text-xs font-mono font-bold mb-1">
-              <span className="text-slate-400">Задержка I/O / БД:</span>
-              <span className="text-amber-400">{ioDelayMs} ms</span>
+          <div className="space-y-2 border-t border-slate-800 pt-3">
+            <div className="flex justify-between text-[11px] font-medium">
+              <label htmlFor="io-delay" className="text-slate-300">{isRu ? 'Ожидание I/O' : 'I/O wait'}</label>
+              <span className="font-mono text-amber-300">{ioDelayMs} ms</span>
             </div>
-            <input
-              type="range"
-              min="20"
-              max="400"
-              step="20"
-              value={ioDelayMs}
-              onChange={(e) => setIoDelayMs(Number(e.target.value))}
-              className="w-full accent-amber-500 cursor-pointer"
-            />
-            <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
-              <span>20ms (In-Memory)</span>
-              <span>400ms (Heavy SQL)</span>
-            </div>
+            <input id="io-delay" aria-label={isRu ? 'Задержка ввода-вывода' : 'I/O delay'} type="range" min="20" max="400" step="20" value={ioDelayMs} onChange={(e) => setIoDelayMs(Number(e.target.value))} className="w-full accent-amber-400 cursor-pointer" />
+            <p className="text-[10px] text-slate-500">{isRu ? 'Время ожидания БД или сети для одного запроса.' : 'Database or network wait time per request.'}</p>
           </div>
-
-          {/* Live Ingress Indicator */}
-          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center justify-between">
-            <span className="text-[11px] text-slate-400">Активных в пайплайне:</span>
-            <span className="text-sm font-mono font-bold text-white">{activePackets.length}</span>
+          <div className="space-y-2 border-t border-slate-800 pt-3">
+            <div className="text-[10px] font-mono uppercase tracking-wide text-slate-500">{isRu ? 'Профиль поступления' : 'Traffic pattern'}</div>
+            <div className="grid grid-cols-3 gap-1">
+              {(['steady', 'ramp', 'burst'] as TrafficProfile[]).map((profile) => (
+                <button key={profile} type="button" onClick={() => setTrafficProfile(profile)}
+                  className={'rounded-md px-1.5 py-1.5 text-[10px] font-medium transition-colors ' + (trafficProfile === profile ? 'bg-slate-700 text-white' : 'bg-slate-950/60 text-slate-400 hover:text-slate-200')}>
+                  {profile === 'steady' ? (isRu ? 'Ровно' : 'Steady') : profile === 'ramp' ? (isRu ? 'Разгон' : 'Ramp') : (isRu ? 'Пики' : 'Bursts')}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-slate-500">{isRu ? 'Меняет равномерность входящего потока.' : 'Changes how evenly requests arrive.'}</p>
           </div>
-        </div>
+          <div className="border-t border-slate-800 pt-3">
+            <button type="button" onClick={() => setIsBrokenEventLoop((previous) => !previous)} disabled={mode !== 'async'}
+              title={isRu ? 'Показывает эффект блокирующего time.sleep() внутри async def' : 'Shows blocking time.sleep() inside async def'}
+              className={'w-full rounded-lg border px-3 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ' + (isBrokenEventLoop ? 'border-red-500/60 bg-red-500/15 text-red-200' : 'border-slate-700 bg-slate-950/50 text-slate-300 hover:border-red-500/50')}>
+              <span className="flex items-center gap-2 text-[11px] font-semibold"><Flame className="w-3.5 h-3.5 text-amber-400" />{isRu ? 'Блокирующий time.sleep()' : 'Blocking time.sleep()'}<span className="ml-auto">{isBrokenEventLoop ? 'ON' : 'OFF'}</span></span>
+              <span className="mt-1 block pl-5 text-[10px] text-slate-500">{isRu ? 'Замораживает Event Loop во время ожидания.' : 'Freezes the event loop during the wait.'}</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 border-t border-slate-800 pt-3">
+            <button type="button" onClick={() => setIsRunning((running) => !running)}
+              className={'rounded-lg px-3 py-2.5 text-xs font-bold text-white transition-colors ' + (isRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-cyan-600 hover:bg-cyan-500')}>
+              {isRunning ? <Pause className="w-4 h-4 inline mr-1" /> : <Play className="w-4 h-4 inline mr-1" />}
+              {isRunning ? (isRu ? 'Пауза' : 'Pause') : (isRu ? 'Запустить' : 'Run')}
+            </button>
+            <button type="button" onClick={handleReset} className="rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-xs text-slate-300 hover:bg-slate-800 transition-colors">
+              <RotateCcw className="w-3.5 h-3.5 inline mr-1" />{isRu ? 'Сброс' : 'Reset'}
+            </button>
+          </div>
+        </aside>
 
-        {/* STAGE 2: BACKLOG BUFFER MATRIX & WORKER POOL (6 Cols) */}
-        <div className="lg:col-span-6 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-mono font-bold uppercase text-slate-300">
-                  2. Буфер очереди & Воркеры
-                </span>
-              </div>
-              <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded ${
-                queuePackets.length >= queueMaxCapacity ? 'bg-red-950 text-red-400 border border-red-800 animate-pulse' : 'bg-slate-800 text-slate-300'
-              }`}>
-                Очередь: {queuePackets.length} / {queueMaxCapacity} слотов
-              </span>
-            </div>
-
-            {/* Visual Buffer Slot Matrix (Animated grid) */}
-            <div className="mb-4">
-              <div className="text-[10px] text-slate-500 font-mono mb-1.5 flex justify-between">
-                <span>СЕТКА ОЧЕРЕДИ ОС (BACKLOG BUFFER):</span>
-                <span>{queuePackets.length >= queueMaxCapacity ? '⚠ ПЕРЕПОЛНЕНИЕ (504 DROPPED)' : 'Свободно для приема'}</span>
-              </div>
-              <div className="grid grid-cols-8 sm:grid-cols-12 gap-1 p-2 bg-slate-950 rounded-xl border border-slate-800">
-                {Array.from({ length: queueMaxCapacity }).map((_, idx) => {
-                  const isOccupied = idx < queuePackets.length;
-                  return (
-                    <div
-                      key={idx}
-                      className={`h-5 rounded-md transition-all duration-200 border ${
-                        isOccupied
-                          ? idx > queueMaxCapacity - 4
-                            ? 'bg-red-500/80 border-red-400 shadow-sm shadow-red-500/30 animate-pulse'
-                            : 'bg-amber-500/80 border-amber-400'
-                          : 'bg-slate-900 border-slate-800/80'
-                      }`}
-                      title={isOccupied ? `Запрос #${queuePackets[idx]?.id} ждет свободного воркера` : 'Свободный слот очереди'}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Worker Process Lanes or Event Loop Engine */}
+        <section className="min-w-0 rounded-2xl border border-slate-700/80 bg-slate-900/40 backdrop-blur-sm p-4 sm:p-5 space-y-4" aria-label={isRu ? 'Визуализация задач' : 'Task visualization'}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <div className="text-[10px] text-slate-500 font-mono mb-1.5">
-                {mode === 'sync' ? 'СИНХРОННЫЕ ПРОЦЕССЫ (1 ЗАПРОС = 1 ПОТОК):' : 'АСИНХРОННЫЙ EVENT LOOP МУЛЬТИПЛЕКСОР:'}
+              <h3 className="text-sm font-bold text-white">{isRu ? 'Путь запроса' : 'Request path'}</h3>
+              <p className="text-[10px] text-slate-500">{isRu ? 'Карточки показывают задачи текущей симуляции' : 'Tiles show tasks in this live simulation'}</p>
+            </div>
+            <div className="flex gap-3 text-[10px] font-mono text-slate-400">
+              <span>{isRu ? 'очередь' : 'queued'} <b className="text-amber-300">{queuePackets.length}</b></span>
+              <span>{isRu ? 'в работе' : 'running'} <b className="text-cyan-300">{processingPackets.length}</b></span>
+              <span>{isRu ? 'ответы' : 'done'} <b className="text-emerald-300">{processedCount}</b></span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-[0.8fr_1.1fr_2fr_0.8fr] gap-2 items-stretch">
+            <div className="rounded-xl border border-cyan-500/25 bg-cyan-950/15 p-3 min-w-0">
+              <div className="flex justify-between items-center text-[10px] font-mono uppercase text-cyan-200"><span>{isRu ? 'Вход' : 'Ingress'}</span><span>{concurrency}/s</span></div>
+              <div className="mt-3 flex h-9 items-center gap-1 overflow-hidden" aria-label={isRu ? 'Поступающие запросы' : 'Incoming requests'}>
+                {Array.from({ length: Math.min(12, Math.max(4, Math.round(concurrency / 5))) }, (_, index) => (
+                  <span key={index} className="packet-enter h-5 w-3 shrink-0 rounded-sm bg-cyan-400/80 shadow-sm shadow-cyan-400/30" style={{ animationDelay: String(index * 35) + 'ms' }} />
+                ))}
               </div>
-
+              <div className="text-[10px] text-slate-500">{isRu ? 'запросов в секунду' : 'requests per second'}</div>
+            </div>
+            <div className="rounded-xl border border-amber-500/25 bg-amber-950/15 p-3 min-w-0">
+              <div className="flex justify-between items-center text-[10px] font-mono uppercase text-amber-200"><span>{isRu ? 'Очередь' : 'Queue'}</span><span>{queuePackets.length}/{queueMaxCapacity}</span></div>
+              <div className="mt-2 grid grid-cols-4 gap-1">
+                {queuePackets.slice(0, queueMaxCapacity).map((packet) => (
+                  <span key={packet.id} className="packet-enter flex h-7 items-center justify-center rounded border border-amber-400/40 bg-amber-500/25 text-[9px] font-mono text-amber-100" title={isRu ? 'Задача ждёт свободный worker' : 'Task waiting for a free worker'}>{packet.id}</span>
+                ))}
+                {queuePackets.length === 0 && <span className="col-span-4 py-2 text-center text-[10px] text-slate-600">{isRu ? 'пусто' : 'empty'}</span>}
+              </div>
+              <div className="mt-2 text-[10px] text-slate-500">{isRu ? 'ждут свободного исполнителя' : 'waiting for capacity'}</div>
+            </div>
+            <div className={'rounded-xl border p-3 min-w-0 transition-colors ' + (mode === 'sync' ? 'border-amber-500/25 bg-amber-950/10' : isBrokenEventLoop ? 'border-red-500/40 bg-red-950/20' : 'border-cyan-500/25 bg-cyan-950/10')}>
+              <div className="flex justify-between items-center text-[10px] font-mono uppercase text-slate-300"><span>{mode === 'sync' ? (isRu ? 'Workers · 1 задача на процесс' : 'Workers · 1 task each') : 'Event Loop · coroutines'}</span><span>{mode === 'sync' ? workerCount : processingPackets.length}</span></div>
               {mode === 'sync' ? (
-                /* Gunicorn Sync Workers */
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {Array.from({ length: workerCount }).map((_, wIdx) => {
-                    const isBusy = workersBusyRef.current[wIdx] > 0;
-                    return (
-                      <div
-                        key={wIdx}
-                        className={`p-2.5 rounded-xl border text-center transition-all ${
-                          isBusy
-                            ? 'bg-amber-950/40 border-amber-500/60 text-amber-200'
-                            : 'bg-slate-950 border-slate-800 text-slate-500'
-                        }`}
-                      >
-                        <div className="font-mono text-xs font-bold mb-1">Worker #{wIdx + 1}</div>
-                        <div className="text-[10px] font-mono">
-                          {isBusy ? (
-                            <span className="text-amber-400 font-bold flex items-center justify-center gap-1">
-                              <Clock className="w-3 h-3 animate-spin" />
-                              <span>Блокировка I/O</span>
-                            </span>
-                          ) : (
-                            <span className="text-emerald-400">Свободен</span>
-                          )}
-                        </div>
-                      </div>
-                    );
+                <div className="mt-2 grid grid-cols-2 gap-1.5">
+                  {Array.from({ length: workerCount }, (_, workerIndex) => {
+                    const packet = processingPackets.find((task) => task.workerId === workerIndex);
+                    const isBusy = workersBusyRef.current[workerIndex] > 0;
+                    return <div key={workerIndex} className="packet-enter min-h-12 rounded-lg border border-slate-700/70 bg-slate-950/30 p-1.5">
+                      <div className="text-[9px] font-mono text-slate-500">W{workerIndex + 1}</div>
+                      <div className={'text-[10px] font-mono ' + (packet ? 'text-amber-200' : 'text-slate-600')}>{packet ? '#' + packet.id + ' · ' + ioDelayMs + 'ms' : isBusy ? 'I/O…' : (isRu ? 'свободен' : 'idle')}</div>
+                    </div>;
                   })}
                 </div>
               ) : (
-                /* Uvicorn Event Loop */
-                <div className={`p-4 rounded-xl border transition-all ${
-                  isBrokenEventLoop 
-                    ? 'bg-red-950/40 border-red-500 text-red-200' 
-                    : 'bg-cyan-950/30 border-cyan-500/40 text-cyan-200'
-                }`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${isBrokenEventLoop ? 'bg-red-500 animate-ping' : 'bg-cyan-400 animate-pulse'}`} />
-                      <span className="font-mono font-bold text-xs">
-                        {isBrokenEventLoop ? 'Event Loop ЗАБЛОКИРОВАН (time.sleep)' : 'Event Loop активен (Zero-Lock non-blocking)'}
-                      </span>
-                    </div>
-                    <span className="text-xs font-mono font-bold">
-                      {processingPackets.length} корутин на I/O
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-400 leading-relaxed">
-                    {isBrokenEventLoop
-                      ? '❌ Синхронный вызов внутри async def заморозил единственный системный поток. Все корутины висят!'
-                      : '✓ Поток не блокируется: как только корутина делает await, цикл событий моментально берет следующую.'}
-                  </div>
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 max-h-28 overflow-y-auto">
+                  {processingPackets.slice(0, 20).map((packet) => (
+                    <div key={packet.id} className={'packet-enter rounded-lg border p-1.5 text-[10px] font-mono ' + (isBrokenEventLoop ? 'border-red-400/50 bg-red-500/15 text-red-200' : 'border-cyan-400/40 bg-cyan-500/15 text-cyan-100')} title={isBrokenEventLoop ? (isRu ? 'Ждёт разблокировки Event Loop' : 'Waiting for event loop to unblock') : (isRu ? 'Корутина ждёт I/O, не блокируя цикл' : 'Coroutine awaiting I/O without blocking the loop')}>#{packet.id} · await</div>
+                  ))}
+                  {processingPackets.length === 0 && <span className="col-span-full py-2 text-center text-[10px] text-slate-600">{isRu ? 'нет активных задач' : 'no active tasks'}</span>}
+                  {processingPackets.length > 20 && <span className="col-span-full text-[10px] text-slate-500">+{processingPackets.length - 20}</span>}
                 </div>
               )}
+              <div className="mt-2 text-[10px] text-slate-500">{mode === 'sync' ? (isRu ? 'процессы заняты запросами' : 'workers occupied by requests') : (isBrokenEventLoop ? (isRu ? 'блокировка удерживает весь цикл' : 'blocking call stalls the loop') : (isRu ? 'задачи ждут I/O одновременно' : 'tasks await I/O concurrently'))}</div>
+            </div>
+            <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/15 p-3 min-w-0">
+              <div className="flex justify-between items-center text-[10px] font-mono uppercase text-emerald-200"><span>{isRu ? 'Ответы' : 'Replies'}</span><span>{processedCount}</span></div>
+              <div className="mt-2 flex flex-wrap gap-1 min-h-7">
+                {activePackets.filter((packet) => packet.status === 'completed').slice(-8).map((packet) => (
+                  <span key={packet.id} className="packet-enter rounded border border-emerald-400/30 bg-emerald-500/15 px-1.5 py-1 text-[9px] font-mono text-emerald-200">#{packet.id}</span>
+                ))}
+                {dropped504Count > 0 && <span className="rounded border border-red-500/40 bg-red-500/15 px-1.5 py-1 text-[9px] font-mono text-red-200">504 ×{dropped504Count}</span>}
+              </div>
+              <div className="mt-2 text-[10px] text-slate-500">{isRu ? 'выполнено / потеряно' : 'completed / dropped'}</div>
             </div>
           </div>
-
-          {/* Break Event Loop Toggle Button */}
-          <div className="pt-2 flex items-center justify-between">
-            <button
-              onClick={() => setIsBrokenEventLoop(prev => !prev)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-2 cursor-pointer ${
-                isBrokenEventLoop
-                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 animate-pulse'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              <Flame className="w-4 h-4 text-amber-400" />
-              <span>{isBrokenEventLoop ? '💥 Убрать time.sleep() инъекцию' : '💥 Сломать Event Loop (Inject time.sleep)'}</span>
-            </button>
-            <span className="text-[11px] font-mono text-slate-500">
-              Lag: <strong className={eventLoopLag > 10 ? 'text-red-400' : 'text-emerald-400'}>{eventLoopLag} ms</strong>
-            </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border-t border-slate-800 pt-3">
+            <div className="rounded-lg bg-slate-950/40 p-2"><div className="text-[9px] uppercase text-slate-500">Throughput</div><div className="font-mono text-sm text-cyan-300">{currentRps} <small className="text-[10px] text-slate-500">req/s</small></div></div>
+            <div className="rounded-lg bg-slate-950/40 p-2"><div className="text-[9px] uppercase text-slate-500">{isRu ? 'Задержка' : 'Latency'}</div><div className="font-mono text-sm text-amber-300">{currentLatency} <small className="text-[10px] text-slate-500">ms</small></div></div>
+            <div className="rounded-lg bg-slate-950/40 p-2"><div className="text-[9px] uppercase text-slate-500">Event Loop Lag</div><div className={'font-mono text-sm ' + (eventLoopLag > 10 ? 'text-red-300' : 'text-emerald-300')}>{eventLoopLag} <small className="text-[10px] text-slate-500">ms</small></div></div>
+            <div className="rounded-lg bg-slate-950/40 p-2"><div className="text-[9px] uppercase text-slate-500">{isRu ? 'Потери' : 'Dropped'}</div><div className={'font-mono text-sm ' + (dropped504Count ? 'text-red-300' : 'text-slate-300')}>{dropped504Count}</div></div>
           </div>
-        </div>
-
-        {/* STAGE 3: EGRESS & REAL-TIME TELEMETRY STATS (3 Cols) */}
-        <div className="lg:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono font-bold uppercase text-slate-400">3. Итог & Ответы</span>
-              <span className="text-emerald-400 font-mono text-xs font-bold">{processedCount} done</span>
-            </div>
-            
-            {/* Realtime KPI cards */}
-            <div className="space-y-2">
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80">
-                <div className="text-[10px] text-slate-500 font-mono">РЕАЛЬНЫЙ THROUGHPUT:</div>
-                <div className="text-xl font-bold font-mono text-cyan-400">{currentRps} <span className="text-xs text-slate-500">req/s</span></div>
-              </div>
-
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80">
-                <div className="text-[10px] text-slate-500 font-mono">СРЕДНЯЯ ЗАДЕРЖКА:</div>
-                <div className={`text-xl font-bold font-mono ${currentLatency > 300 ? 'text-red-400' : 'text-amber-400'}`}>
-                  {currentLatency} <span className="text-xs text-slate-500">ms</span>
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80">
-                <div className="text-[10px] text-slate-500 font-mono">ОТБРОШЕНО 504 TIMEOUT:</div>
-                <div className={`text-xl font-bold font-mono ${dropped504Count > 0 ? 'text-red-400' : 'text-slate-400'}`}>
-                  {dropped504Count} <span className="text-xs text-slate-500">requests</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Control Buttons */}
-          <div className="space-y-2 pt-3 border-t border-slate-800">
-            {!isRunning ? (
-              <button
-                onClick={() => setIsRunning(true)}
-                className="w-full py-2.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs font-mono shadow-md shadow-cyan-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                <span>ЗАПУСТИТЬ ПОТОК ТРАФИКА</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsRunning(false)}
-                className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs font-mono shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
-              >
-                <Square className="w-4 h-4 fill-current" />
-                <span>ПАУЗА СИМУЛЯЦИИ</span>
-              </button>
-            )}
-
-            <button
-              onClick={handleReset}
-              className="w-full py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Сбросить счетчики</span>
-            </button>
-          </div>
-        </div>
+        </section>
       </div>
 
-      {/* SECTION 4: REAL-TIME OSCILLOSCOPE GRAPH (LIVE CANVAS) */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3" id="metrics-graph">
+      {/* Performance timeline */}
+      <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-3" id="metrics-graph">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-cyan-400" />
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
-              Осциллограф производительности в 60 FPS (Throughput vs Latency Waveform)
+              {isRu ? 'График нагрузки: пропускная способность и задержка' : 'Load timeline: throughput and latency'}
             </span>
           </div>
 
           <div className="flex items-center gap-4 text-[11px] font-mono">
             <span className="flex items-center gap-1.5 text-cyan-400">
-              <span className="w-2.5 h-0.5 bg-cyan-400 inline-block" /> Throughput (RPS)
+              <span className="w-2.5 h-0.5 bg-cyan-400 inline-block" /> {isRu ? "Пропускная способность" : "Throughput"} · 0–250 req/s
             </span>
             <span className="flex items-center gap-1.5 text-amber-400">
-              <span className="w-2.5 h-0.5 bg-amber-400 inline-block" /> Latency (ms)
+              <span className="w-2.5 h-0.5 bg-amber-400 inline-block" /> {isRu ? "Задержка" : "Latency"} · 0–600 ms
             </span>
             {mode === 'async' && (
               <span className="flex items-center gap-1.5 text-purple-400">
@@ -722,8 +536,10 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
           <canvas
             ref={chartCanvasRef}
             width={900}
-            height={160}
-            className="w-full h-40 block"
+            height={180}
+            role="img"
+            aria-label={isRu ? 'График метрик нагрузки за последние секунды' : 'Load metrics over recent seconds'}
+            className="w-full h-44 block"
           />
         </div>
       </div>

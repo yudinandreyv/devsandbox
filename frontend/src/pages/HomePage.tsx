@@ -246,7 +246,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* ACTIVE TRAINER CONTAINER */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 sm:p-8 shadow-sm">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/70 bg-white/65 dark:bg-slate-900/30 backdrop-blur-[2px] p-6 sm:p-8 shadow-sm">
             {activeTrainer === 'sync-async' ? (
               <div className="space-y-10">
                 {/* 1. INTERACTIVE PIPELINE VISUALIZER & 60FPS OSCILLOSCOPE */}

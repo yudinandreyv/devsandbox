@@ -13,6 +13,7 @@ export const ru = {
   stopwatch: {
     title: 'Время сессии',
     running: 'Идёт отсчёт',
+    resetTimer: 'Сбросить таймер сессии',
   },
   telemetry: {
     badge: 'Телеметрия',

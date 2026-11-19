@@ -42,7 +42,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
 
         <div className="flex items-center gap-2 shrink-0">
           <a
-            href="https://github.com/yudinandrey"
+            href="https://github.com/yudinandreyv/devsandbox"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold shadow-xs transition-colors"

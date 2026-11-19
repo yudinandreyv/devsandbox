@@ -13,6 +13,7 @@ export const en = {
   stopwatch: {
     title: 'Session Duration',
     running: 'Running',
+    resetTimer: 'Reset session timer',
   },
   telemetry: {
     badge: 'Telemetry',

@@ -28,7 +28,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+    <div className="app-theme-shell min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
       <Navbar />
       <main className="flex-1 w-full">
         {renderCurrentPage()}
