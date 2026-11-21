@@ -59,7 +59,7 @@ spec:
     - from: []
       ports:
         - protocol: TCP
-          port: 80
+          port: 8080
         - protocol: TCP
           port: 8000
   egress:
@@ -87,7 +87,7 @@ metadata:
 data:
   APP_ENV: "production"
   SITE_DOMAIN: "sandbox.gateaway.cloud"
-  CORS_ORIGINS: "https://sandbox.gateaway.cloud"
+  CORS_ORIGINS: '["https://sandbox.gateaway.cloud"]'
   DB_STATEMENT_TIMEOUT_MS: "1500"
   RATE_LIMIT_GLOBAL: "60/minute"
   RATE_LIMIT_PROBE: "15/minute"
@@ -162,7 +162,7 @@ spec:
   type: ClusterIP
   ports:
     - port: 80
-          targetPort: 8080
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
@@ -178,6 +178,11 @@ metadata:
     app: api-sandbox
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: api-sandbox
