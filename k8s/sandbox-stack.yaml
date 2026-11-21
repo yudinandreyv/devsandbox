@@ -260,38 +260,11 @@ spec:
   selector:
     app: api-sandbox
 ---
-# 10. HTTPRoute (NGINX Gateway Fabric)
-# Routes both existing public hostnames to the sandbox API; frontend root is served by inventory-frontend.
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: sandbox-gateway-route
-  namespace: sandbox
-  labels:
-    app: dev-sandbox
-spec:
-  parentRefs:
-    - name: public-gateway
-      namespace: nginx-gateway
-      sectionName: http
-  hostnames:
-    - "gateaway.cloud"
-    - "app.gateaway.cloud"
-  rules:
-    # 10.1 API routes directed to api-sandbox
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /api/v1
-      backendRefs:
-        - name: api-sandbox
-          port: 8000
----
-# Allow the existing inventory HTTPRoute to use the sandbox frontend Service.
+# Allow inventory HTTPRoutes to send frontend and sandbox-only API paths across namespaces.
 apiVersion: gateway.networking.k8s.io/v1
 kind: ReferenceGrant
 metadata:
-  name: allow-inventory-route-to-sandbox-frontend
+  name: allow-inventory-routes-to-sandbox-services
   namespace: sandbox
 spec:
   from:
@@ -302,3 +275,6 @@ spec:
     - group: ""
       kind: Service
       name: frontend-sandbox
+    - group: ""
+      kind: Service
+      name: api-sandbox
