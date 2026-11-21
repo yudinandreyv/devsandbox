@@ -57,14 +57,15 @@
   html.dark .app-theme-shell::before { opacity: 0; }
   html.dark .app-theme-shell::after { opacity: 1; }
 
-  .range-hit-area {
-    position: relative;
-    z-index: 1;
-    padding-top: 30px;
-    padding-bottom: 20px;
-    margin-top: -30px !important;
-    margin-bottom: -20px !important;
-    touch-action: pan-y;
+  .spotlight-card { isolation: isolate; }
+  .spotlight-card__glow {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(500px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(16, 185, 129, 0.12), transparent 42%);
+    transition: opacity 180ms ease-out;
   }
 
   .packet-enter { animation: packet-enter 180ms ease-out both; }
@@ -74,6 +75,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .app-theme-shell::before, .app-theme-shell::after { transition-duration: 0.01ms; }
+    .spotlight-card__glow { transition-duration: 0.01ms; }
     .animate-ping, .animate-pulse, .packet-enter { animation: none !important; }
   }
   

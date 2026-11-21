@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Flame, RotateCcw, Activity, Zap, Server, ArrowRight, Pause } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
+import { RangeSlider } from './RangeSlider';
+import { ParamWithTooltip, SpotlightCard } from './SpotlightCard';
 
 interface VisualizerProps {
   onRunBackendProbe?: (scenario: string, concurrency: number, delayMs: number) => Promise<any>;
@@ -376,15 +378,18 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
 
       {/* One settings panel and one live pipeline */}
       <div className="grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)] gap-4">
-        <aside className="rounded-2xl border border-slate-700/80 bg-slate-900/55 backdrop-blur-sm p-4 sm:p-5 space-y-4">
+        <SpotlightCard className="h-full border border-slate-700/80 bg-slate-900/55 backdrop-blur-sm">
+        <aside className="relative z-10 p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-white">{isRu ? 'Настройки опыта' : 'Experiment settings'}</h3>
             <span className={'text-[10px] font-mono px-2 py-1 rounded-full ' + (isRunning ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-800 text-slate-400')}>
               {isRunning ? (isRu ? 'ИДЁТ' : 'RUNNING') : (isRu ? 'ПАУЗА' : 'PAUSED')}
             </span>
           </div>
-          <div className="space-y-2">
-            <div className="text-[10px] font-mono uppercase tracking-wide text-slate-500">{isRu ? 'Модель выполнения' : 'Execution model'}</div>
+          <ParamWithTooltip
+            label={isRu ? 'Модель выполнения' : 'Execution model'}
+            description={isRu ? 'Sync занимает процесс на всё время одного запроса. Async освобождает цикл событий, пока корутина ждёт ввод-вывод.' : 'Sync occupies one process for a whole request. Async lets the event loop run other coroutines while I/O is pending.'}
+          >
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => { setMode('sync'); setIsBrokenEventLoop(false); }}
                 title={isRu ? 'Один worker выполняет один запрос за раз' : 'Each worker handles one request at a time'}
@@ -400,25 +405,32 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
             <p className="text-[10px] leading-relaxed text-slate-500">
               {mode === 'sync' ? (isRu ? 'Занятый worker ждёт завершения запроса.' : 'A busy worker waits for its request to finish.') : (isRu ? 'На await Event Loop запускает другие корутины.' : 'At await, the event loop runs other coroutines.')}
             </p>
-          </div>
-          <div className="space-y-2 border-t border-slate-800 pt-3">
-            <div className="flex justify-between text-[11px] font-medium">
-              <label htmlFor="traffic-rate" className="text-slate-300">{isRu ? 'Входящая нагрузка' : 'Incoming load'}</label>
-              <span className="font-mono text-cyan-300">{concurrency} req/s</span>
-            </div>
-            <input id="traffic-rate" aria-label={isRu ? 'Входящие запросы в секунду' : 'Incoming requests per second'} type="range" min="4" max="50" step="2" value={concurrency} onChange={(e) => setConcurrency(Number(e.target.value))} className="w-full accent-cyan-400 range-hit-area cursor-pointer" />
+          </ParamWithTooltip>
+          <div className="border-t border-slate-800 pt-3">
+          <ParamWithTooltip
+            label={isRu ? 'Входящая нагрузка' : 'Incoming load'}
+            value={<span className="font-mono text-cyan-300">{concurrency} req/s</span>}
+            description={isRu ? 'Задаёт скорость поступления запросов в симулятор и число конкурентных запросов для реального API-замера.' : 'Sets the request arrival rate in the simulator and the concurrency value sent with a live API probe.'}
+          >
+            <RangeSlider id="traffic-rate" label={isRu ? 'Входящие запросы в секунду' : 'Incoming requests per second'} min={4} max={50} step={2} value={concurrency} onChange={setConcurrency} className="accent-cyan-400 cursor-pointer" />
             <p className="text-[10px] text-slate-500">{isRu ? 'Сколько запросов поступает каждую секунду.' : 'Requests entering the system each second.'}</p>
+          </ParamWithTooltip>
           </div>
-          <div className="space-y-2 border-t border-slate-800 pt-3">
-            <div className="flex justify-between text-[11px] font-medium">
-              <label htmlFor="io-delay" className="text-slate-300">{isRu ? 'Ожидание I/O' : 'I/O wait'}</label>
-              <span className="font-mono text-amber-300">{ioDelayMs} ms</span>
-            </div>
-            <input id="io-delay" aria-label={isRu ? 'Задержка ввода-вывода' : 'I/O delay'} type="range" min="20" max="400" step="20" value={ioDelayMs} onChange={(e) => setIoDelayMs(Number(e.target.value))} className="w-full accent-amber-400 range-hit-area cursor-pointer" />
+          <div className="border-t border-slate-800 pt-3">
+          <ParamWithTooltip
+            label={isRu ? 'Ожидание I/O' : 'I/O wait'}
+            value={<span className="font-mono text-amber-300">{ioDelayMs} ms</span>}
+            description={isRu ? 'Моделирует время ожидания ответа базы данных или сети для каждого запроса.' : 'Models how long each request waits for a database or network response.'}
+          >
+            <RangeSlider id="io-delay" label={isRu ? 'Задержка ввода-вывода' : 'I/O delay'} min={20} max={400} step={20} value={ioDelayMs} onChange={setIoDelayMs} className="accent-amber-400 cursor-pointer" />
             <p className="text-[10px] text-slate-500">{isRu ? 'Время ожидания БД или сети для одного запроса.' : 'Database or network wait time per request.'}</p>
+          </ParamWithTooltip>
           </div>
-          <div className="space-y-2 border-t border-slate-800 pt-3">
-            <div className="text-[10px] font-mono uppercase tracking-wide text-slate-500">{isRu ? 'Профиль поступления' : 'Traffic pattern'}</div>
+          <div className="border-t border-slate-800 pt-3">
+          <ParamWithTooltip
+            label={isRu ? 'Профиль поступления' : 'Traffic pattern'}
+            description={isRu ? 'Ровно распределяет запросы, постепенно увеличивает нагрузку или создаёт короткие всплески.' : 'Distributes requests steadily, ramps load up, or creates short bursts.'}
+          >
             <div className="grid grid-cols-3 gap-1">
               {(['steady', 'ramp', 'burst'] as TrafficProfile[]).map((profile) => (
                 <button key={profile} type="button" onClick={() => setTrafficProfile(profile)}
@@ -428,6 +440,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
               ))}
             </div>
             <p className="text-[10px] text-slate-500">{isRu ? 'Меняет равномерность входящего потока.' : 'Changes how evenly requests arrive.'}</p>
+          </ParamWithTooltip>
           </div>
           <div className="border-t border-slate-800 pt-3">
             <button type="button" onClick={() => setIsBrokenEventLoop((previous) => !previous)} disabled={mode !== 'async'}
@@ -467,8 +480,10 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
             </button>
           </div>
         </aside>
+        </SpotlightCard>
 
-        <section className="min-w-0 rounded-2xl border border-slate-700/80 bg-slate-900/40 backdrop-blur-sm p-4 sm:p-5 space-y-4" aria-label={isRu ? 'Визуализация задач' : 'Task visualization'}>
+        <SpotlightCard className="min-w-0 border border-slate-700/80 bg-slate-900/40 backdrop-blur-sm">
+        <section className="relative z-10 min-w-0 p-4 sm:p-5 space-y-4" aria-label={isRu ? 'Визуализация задач' : 'Task visualization'}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-bold text-white">{isRu ? 'Путь запроса' : 'Request path'}</h3>
@@ -568,6 +583,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
             )}
           </div>
         </section>
+        </SpotlightCard>
       </div>
 
       {/* Performance timeline */}
