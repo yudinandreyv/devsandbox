@@ -264,7 +264,7 @@ export const PgXrayTrainer: React.FC = () => {
                 className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
                   isSelected
                     ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 text-brand-900 dark:text-brand-100 shadow-sm ring-1 ring-brand-500/30'
-                    : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300'
+                    : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">

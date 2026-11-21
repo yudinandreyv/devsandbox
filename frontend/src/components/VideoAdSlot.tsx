@@ -84,7 +84,7 @@ export const VideoAdSlot: React.FC = () => {
           {isRu ? 'Партнёрский блок: Hetzner / Google Cloud / Cloudflare' : 'Partner: Cloudflare / Hetzner Cloud'}
         </span>
         <a
-          href="https://github.com/yudinandrey"
+          href="https://github.com/yudinandreyv/devsandbox"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-white flex items-center gap-1 font-mono transition-colors"

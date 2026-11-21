@@ -51,13 +51,29 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [state.locale, state.path]);
 
+  useEffect(() => {
+    const handlePopState = () => {
+      const pathname = window.location.pathname;
+      const segments = pathname.split('/').filter(Boolean);
+      const localeFromPath = segments[0] === 'ru' || segments[0] === 'en' ? segments[0] as SupportedLocale : state.locale;
+      const subpath = segments[0] === 'ru' || segments[0] === 'en'
+        ? '/' + segments.slice(1).join('/')
+        : pathname;
+      setState({ locale: localeFromPath, path: subpath === '/' ? '' : subpath });
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [state.locale]);
+
   const switchLocale = (newLocale: SupportedLocale) => {
     setState((prev) => ({ ...prev, locale: newLocale }));
   };
 
   const navigate = (path: string) => {
     const cleanPath = path.startsWith('/') ? path : '/' + path;
-    setState((prev) => ({ ...prev, path: cleanPath === '/' ? '' : cleanPath }));
+    const nextPath = cleanPath === '/' ? '' : cleanPath;
+    setState((prev) => ({ ...prev, path: nextPath }));
+    window.history.pushState({}, '', `/${state.locale}${nextPath}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

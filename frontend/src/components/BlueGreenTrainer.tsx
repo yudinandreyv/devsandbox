@@ -216,7 +216,7 @@ function TrafficDiagram({
   const bw = Math.max(blueWeight, 0);
   const gw = Math.max(greenWeight, 0);
   return (
-    <div className="flex items-center justify-center gap-6 py-4 select-none">
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 py-4 select-none">
       {/* Internet */}
       <div className="flex flex-col items-center">
         <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-2xl shadow">
@@ -374,19 +374,22 @@ export default function BlueGreenTrainer() {
               { id: "canary_10", label_en: "Canary 10 %" },
               { id: "50_50", label_en: "50 / 50 Split" },
               { id: "full_cutover", label_en: "Full Cutover" },
-              { id: "rollback", label_en: "Rollback" },
+              { id: "rollback", label_en: "Manual Rollback" },
+              { id: "bad_gateway_502", label_en: "502/504 Bad Gateway" },
+              { id: "drain_connections", label_en: "Graceful Drain" },
+              { id: "auto_rollback", label_en: "Auto Circuit Rollback" },
             ]
         ).map((s) => (
           <button
             key={s.id}
             onClick={() => setScenario(s.id)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
               scenario === s.id
-                ? "bg-purple-600 text-white shadow"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                ? "bg-purple-600 text-white shadow-md ring-2 ring-purple-400/50"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-purple-50 dark:hover:bg-purple-900/40 border border-gray-200 dark:border-gray-700"
             }`}
           >
-            {(s as { label_en?: string; id: string }).label_en || s.id}
+            {(s as { label_ru?: string; label_en?: string; id: string }).label_ru || (s as { label_en?: string; id: string }).label_en || s.id}
           </button>
         ))}
       </div>

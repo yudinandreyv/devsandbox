@@ -26,11 +26,11 @@ export const Navbar: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center space-x-1.5">
-                  <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
+                  <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white">
                     {t.brand}
                   </span>
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
-                    STAGE 1
+                  <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
+                    LAB
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono hidden sm:block">
@@ -103,11 +103,11 @@ export const Navbar: React.FC = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Toggle Dark / Light Theme"
+              className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center backdrop-blur-md bg-slate-200/70 dark:bg-slate-800/70 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300/60 dark:border-slate-700/60 text-slate-700 dark:text-amber-300 transition-all duration-300 shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
+              title={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
               aria-label="Toggle Theme"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4 transition-transform duration-300 rotate-0 hover:rotate-45" /> : <Moon className="w-4 h-4 transition-transform duration-300 -rotate-12 hover:rotate-0" />}
             </button>
 
             {/* Guest Session Button / Auth Stub */}

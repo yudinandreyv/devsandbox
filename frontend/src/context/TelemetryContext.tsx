@@ -7,6 +7,7 @@ interface TelemetryContextType {
   recordExperiment: (run: Omit<ExperimentRun, 'id' | 'timestamp' | 'deltaPercentVsPrevious'>) => ExperimentRun;
   measurePing: () => Promise<number | null>;
   resetTelemetry: () => void;
+  resetSessionTimer: () => void;
   clearHistory: () => void;
 }
 
@@ -136,6 +137,20 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return fullRun;
   };
 
+  const resetSessionTimer = () => {
+    const resetAt = Date.now();
+    setElapsedSeconds(0);
+    setTelemetry((prev) => {
+      const updated = {
+        ...prev,
+        sessionStartTime: resetAt,
+        sessionDurationSeconds: 0,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const clearHistory = () => {
     setTelemetry((prev) => {
       const updated = { ...prev, runsHistory: [] };
@@ -172,6 +187,7 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         recordExperiment,
         measurePing,
         resetTelemetry,
+        resetSessionTimer,
         clearHistory,
       }}
     >

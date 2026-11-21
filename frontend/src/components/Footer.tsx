@@ -6,7 +6,7 @@ export const Footer: React.FC = () => {
   const { t, navigate } = useI18n();
 
   return (
-    <footer className="w-full mt-20 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
+    <footer className="w-full mt-10 sm:mt-14 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Col 1: Platform & Mission */}
@@ -85,7 +85,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <a
-                  href="https://github.com/yudinandrey"
+                  href="https://github.com/yudinandreyv/devsandbox"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"

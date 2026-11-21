@@ -64,12 +64,12 @@ export const ContactPage: React.FC = () => {
             <div>
               <div className="text-xs text-slate-500 font-mono">GitHub Profile</div>
               <a
-                href="https://github.com/yudinandrey"
+                href="https://github.com/yudinandreyv"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-semibold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400"
               >
-                github.com/yudinandrey
+                github.com/yudinandreyv
               </a>
             </div>
           </div>
