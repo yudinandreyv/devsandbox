@@ -86,8 +86,8 @@ metadata:
   namespace: sandbox
 data:
   APP_ENV: "production"
-  SITE_DOMAIN: "sandbox.gateaway.cloud"
-  CORS_ORIGINS: '["https://sandbox.gateaway.cloud"]'
+  SITE_DOMAIN: "gateaway.cloud"
+  CORS_ORIGINS: '["https://gateaway.cloud","https://app.gateaway.cloud"]'
   DB_STATEMENT_TIMEOUT_MS: "1500"
   RATE_LIMIT_GLOBAL: "60/minute"
   RATE_LIMIT_PROBE: "15/minute"
@@ -261,7 +261,7 @@ spec:
     app: api-sandbox
 ---
 # 10. HTTPRoute (NGINX Gateway Fabric)
-# Directs sandbox.gateaway.cloud/ to frontend and /api/v1 to backend
+# Routes both existing public hostnames to the sandbox API; frontend root is served by inventory-frontend.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -275,7 +275,8 @@ spec:
       namespace: nginx-gateway
       sectionName: http
   hostnames:
-    - "sandbox.gateaway.cloud"
+    - "gateaway.cloud"
+    - "app.gateaway.cloud"
   rules:
     # 10.1 API routes directed to api-sandbox
     - matches:
@@ -285,11 +286,19 @@ spec:
       backendRefs:
         - name: api-sandbox
           port: 8000
-    # 10.2 Root and static routes directed to frontend-sandbox
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - name: frontend-sandbox
-          port: 80
+---
+# Allow the existing inventory HTTPRoute to use the sandbox frontend Service.
+apiVersion: gateway.networking.k8s.io/v1
+kind: ReferenceGrant
+metadata:
+  name: allow-inventory-route-to-sandbox-frontend
+  namespace: sandbox
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: inventory
+  to:
+    - group: ""
+      kind: Service
+      name: frontend-sandbox

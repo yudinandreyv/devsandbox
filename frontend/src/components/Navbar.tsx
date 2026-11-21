@@ -34,7 +34,7 @@ export const Navbar: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono hidden sm:block">
-                  sandbox.gateaway.cloud
+                  gateaway.cloud
                 </p>
               </div>
             </button>

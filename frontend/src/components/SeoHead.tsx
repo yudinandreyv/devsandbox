@@ -26,7 +26,7 @@ export const SeoHead: React.FC<SeoHeadProps> = ({ title, description, canonicalP
     metaDesc.setAttribute('content', description);
 
     // 3. Update Canonical link
-    const baseUrl = 'https://sandbox.gateaway.cloud';
+    const baseUrl = 'https://gateaway.cloud';
     const canonicalHref = `${baseUrl}/${locale}${normalizedPath}`;
     let canonicalLink = document.querySelector('link[rel="canonical"]');
     if (!canonicalLink) {

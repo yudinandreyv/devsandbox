@@ -89,7 +89,7 @@ export const AboutPage: React.FC = () => {
           </div>
 
           <div className="space-y-2 text-slate-600 dark:text-slate-400 leading-relaxed">
-            <p>• <strong>Ingress & Routing:</strong> NGINX Gateway Fabric HTTPRoute bound to hostname <code>sandbox.gateaway.cloud</code></p>
+            <p>• <strong>Ingress & Routing:</strong> NGINX Gateway Fabric HTTPRoute bound to hostname <code>gateaway.cloud</code></p>
             <p>• <strong>Frontend Tier:</strong> 2x Pods Nginx + React 18 SPA (Non-root user UID 101, Port 80)</p>
             <p>• <strong>API Tier:</strong> 2x Pods FastAPI / Uvicorn (Non-root user UID 1000, Port 8000, read-only root filesystem)</p>
             <p>• <strong>Rate Limiter:</strong> SlowAPI IP-based memory sliding window + Redis distributed rate limiting</p>

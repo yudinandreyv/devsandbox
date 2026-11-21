@@ -6,4 +6,4 @@ Disallow: /docs
 Disallow: /redoc
 Disallow: /openapi.json
 
-Sitemap: https://sandbox.gateaway.cloud/sitemap.xml
+Sitemap: https://gateaway.cloud/sitemap.xml
