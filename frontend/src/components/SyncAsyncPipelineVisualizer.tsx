@@ -27,7 +27,7 @@ interface PerformancePoint {
   droppedCount: number;
 }
 
-export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
+export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBackendProbe }) => {
   const { locale } = useI18n();
   const isRu = locale === 'ru';
   // Mode configuration
@@ -47,12 +47,30 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
   const [currentLatency, setCurrentLatency] = useState<number>(0);
   const [eventLoopLag, setEventLoopLag] = useState<number>(0.4);
   const [history, setHistory] = useState<PerformancePoint[]>([]);
+  const [liveScenario, setLiveScenario] = useState('async_db_pool');
+  const [isProbeRunning, setIsProbeRunning] = useState(false);
+  const [probeResult, setProbeResult] = useState<any | null>(null);
+  const [probeError, setProbeError] = useState<string | null>(null);
 
   // Worker occupancy: map worker index -> remaining busy time ms
   const workersBusyRef = useRef<number[]>(new Array(4).fill(0));
   const queueMaxCapacity = workerCount * 4; // Bounded backlog: Gunicorn/Uvicorn backlog
   const nextIdRef = useRef<number>(1);
   const chartCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const handleLiveProbe = async () => {
+    if (!onRunBackendProbe || isProbeRunning) return;
+    setIsProbeRunning(true);
+    setProbeError(null);
+    try {
+      const result = await onRunBackendProbe(liveScenario, concurrency, ioDelayMs);
+      setProbeResult(result);
+    } catch (error) {
+      setProbeError(error instanceof Error ? error.message : (isRu ? 'Не удалось связаться с API.' : 'Could not reach the API.'));
+    } finally {
+      setIsProbeRunning(false);
+    }
+  };
 
   // Reset counters
   const handleReset = () => {
@@ -388,7 +406,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
               <label htmlFor="traffic-rate" className="text-slate-300">{isRu ? 'Входящая нагрузка' : 'Incoming load'}</label>
               <span className="font-mono text-cyan-300">{concurrency} req/s</span>
             </div>
-            <input id="traffic-rate" aria-label={isRu ? 'Входящие запросы в секунду' : 'Incoming requests per second'} type="range" min="4" max="60" step="2" value={concurrency} onChange={(e) => setConcurrency(Number(e.target.value))} className="w-full accent-cyan-400 cursor-pointer" />
+            <input id="traffic-rate" aria-label={isRu ? 'Входящие запросы в секунду' : 'Incoming requests per second'} type="range" min="4" max="50" step="2" value={concurrency} onChange={(e) => setConcurrency(Number(e.target.value))} className="w-full accent-cyan-400 range-hit-area cursor-pointer" />
             <p className="text-[10px] text-slate-500">{isRu ? 'Сколько запросов поступает каждую секунду.' : 'Requests entering the system each second.'}</p>
           </div>
           <div className="space-y-2 border-t border-slate-800 pt-3">
@@ -396,7 +414,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
               <label htmlFor="io-delay" className="text-slate-300">{isRu ? 'Ожидание I/O' : 'I/O wait'}</label>
               <span className="font-mono text-amber-300">{ioDelayMs} ms</span>
             </div>
-            <input id="io-delay" aria-label={isRu ? 'Задержка ввода-вывода' : 'I/O delay'} type="range" min="20" max="400" step="20" value={ioDelayMs} onChange={(e) => setIoDelayMs(Number(e.target.value))} className="w-full accent-amber-400 cursor-pointer" />
+            <input id="io-delay" aria-label={isRu ? 'Задержка ввода-вывода' : 'I/O delay'} type="range" min="20" max="400" step="20" value={ioDelayMs} onChange={(e) => setIoDelayMs(Number(e.target.value))} className="w-full accent-amber-400 range-hit-area cursor-pointer" />
             <p className="text-[10px] text-slate-500">{isRu ? 'Время ожидания БД или сети для одного запроса.' : 'Database or network wait time per request.'}</p>
           </div>
           <div className="space-y-2 border-t border-slate-800 pt-3">
@@ -419,6 +437,25 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
               <span className="mt-1 block pl-5 text-[10px] text-slate-500">{isRu ? 'Замораживает Event Loop во время ожидания.' : 'Freezes the event loop during the wait.'}</span>
             </button>
           </div>
+          <div className="space-y-2 border-t border-slate-800 pt-3">
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="live-api-scenario" className="text-[10px] font-mono uppercase tracking-wide text-slate-500">{isRu ? 'Реальный API-замер' : 'Live API probe'}</label>
+              <span className="text-[9px] text-emerald-300">{isRu ? 'сервер' : 'server'}</span>
+            </div>
+            <select id="live-api-scenario" value={liveScenario} onChange={(event) => setLiveScenario(event.target.value)}
+              className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-2 py-2 text-[10px] text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+              <option value="async_db_pool">Async DB pool</option>
+              <option value="sync_blocking_db">Blocking call in async</option>
+              <option value="n_plus_one_trap">N+1 database calls</option>
+              <option value="overfetching_select_all">SELECT * / overfetching</option>
+            </select>
+            <p className="text-[10px] text-slate-500">{isRu ? 'Использует значения нагрузки и I/O выше; это настоящий HTTP-запрос.' : 'Uses the load and I/O settings above; sends a real HTTP request.'}</p>
+            <button type="button" onClick={handleLiveProbe} disabled={!onRunBackendProbe || isProbeRunning}
+              className="w-full rounded-lg bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 px-3 py-2 text-[11px] font-semibold text-white transition-colors">
+              {isProbeRunning ? (isRu ? 'Измеряю API…' : 'Probing API…') : (isRu ? 'Запустить реальный замер' : 'Run live API probe')}
+            </button>
+          </div>
+
           <div className="grid grid-cols-2 gap-2 border-t border-slate-800 pt-3">
             <button type="button" onClick={() => setIsRunning((running) => !running)}
               className={'rounded-lg px-3 py-2.5 text-xs font-bold text-white transition-colors ' + (isRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-cyan-600 hover:bg-cyan-500')}>
@@ -503,6 +540,32 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = () => {
             <div className="rounded-lg bg-slate-950/40 p-2"><div className="text-[9px] uppercase text-slate-500">{isRu ? 'Задержка' : 'Latency'}</div><div className="font-mono text-sm text-amber-300">{currentLatency} <small className="text-[10px] text-slate-500">ms</small></div></div>
             <div className="rounded-lg bg-slate-950/40 p-2"><div className="text-[9px] uppercase text-slate-500">Event Loop Lag</div><div className={'font-mono text-sm ' + (eventLoopLag > 10 ? 'text-red-300' : 'text-emerald-300')}>{eventLoopLag} <small className="text-[10px] text-slate-500">ms</small></div></div>
             <div className="rounded-lg bg-slate-950/40 p-2"><div className="text-[9px] uppercase text-slate-500">{isRu ? 'Потери' : 'Dropped'}</div><div className={'font-mono text-sm ' + (dropped504Count ? 'text-red-300' : 'text-slate-300')}>{dropped504Count}</div></div>
+          </div>
+
+          <div className="border-t border-slate-800 pt-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <h4 className="text-[11px] font-semibold text-slate-200">{isRu ? 'Результат реального API-замера' : 'Live API result'}</h4>
+              <span className="text-[9px] font-mono uppercase text-emerald-400">HTTP · Prometheus audit</span>
+            </div>
+            {probeError ? (
+              <p role="alert" className="rounded-lg border border-red-500/30 bg-red-950/20 px-3 py-2 text-[10px] text-red-300">{probeError}</p>
+            ) : probeResult ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="rounded-lg bg-slate-950/50 p-2"><div className="text-[9px] uppercase text-slate-500">{isRu ? 'Время' : 'Elapsed'}</div><div className="font-mono text-xs text-emerald-300">{probeResult.actual_elapsed_ms ?? '—'} ms</div></div>
+                  <div className="rounded-lg bg-slate-950/50 p-2"><div className="text-[9px] uppercase text-slate-500">Throughput</div><div className="font-mono text-xs text-cyan-300">{probeResult.effective_rps ?? '—'} req/s</div></div>
+                  <div className="rounded-lg bg-slate-950/50 p-2"><div className="text-[9px] uppercase text-slate-500">Event Loop Lag</div><div className="font-mono text-xs text-amber-300">{probeResult.event_loop_lag_ms ?? '—'} ms</div></div>
+                  <div className="rounded-lg bg-slate-950/50 p-2"><div className="text-[9px] uppercase text-slate-500">{isRu ? 'SQL-запросы' : 'DB roundtrips'}</div><div className="font-mono text-xs text-slate-200">{probeResult.queries_executed ?? '—'}</div></div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
+                  <span>{isRu ? 'Просканировано' : 'Data scanned'}: {typeof probeResult.data_scanned_bytes === 'number' ? (probeResult.data_scanned_bytes / 1048576).toFixed(3) + ' MB' : '—'}</span>
+                  <span className={probeResult.event_loop_blocked ? 'text-red-300' : 'text-emerald-300'}>{probeResult.event_loop_blocked ? (isRu ? 'Event Loop заблокирован' : 'Event Loop blocked') : (isRu ? 'Event Loop отвечает' : 'Event Loop responsive')}</span>
+                </div>
+                {probeResult.insight && <p className="rounded-lg bg-slate-950/40 px-3 py-2 text-[10px] leading-relaxed text-slate-300">{probeResult.insight}</p>}
+              </div>
+            ) : (
+              <p className="text-[10px] text-slate-500">{isRu ? 'Запусти замер слева: здесь появятся измеренные задержка, пропускная способность и число запросов к БД.' : 'Run the probe on the left to see measured latency, throughput, and database roundtrips.'}</p>
+            )}
           </div>
         </section>
       </div>

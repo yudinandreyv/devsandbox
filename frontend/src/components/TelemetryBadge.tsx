@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Activity, Database, Zap, RefreshCw, X } from 'lucide-react';
 import { useTelemetry } from '../context/TelemetryContext';
 import { useI18n } from '../context/I18nContext';
@@ -8,6 +8,24 @@ export const TelemetryBadge: React.FC = () => {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isPinging, setIsPinging] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const timeoutId = window.setTimeout(() => setIsOpen(false), 7000);
+    const handleOutsidePointer = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleOutsidePointer, true);
+    return () => {
+      window.clearTimeout(timeoutId);
+      document.removeEventListener('pointerdown', handleOutsidePointer, true);
+    };
+  }, [isOpen]);
 
   const formatBytes = (kb: number) => {
     if (kb < 1024) return `${kb} KB`;
@@ -22,9 +40,11 @@ export const TelemetryBadge: React.FC = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((open) => !open)}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
         className="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-xs font-mono text-slate-700 dark:text-slate-300 transition-colors"
       >
         <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400">

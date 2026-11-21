@@ -8,6 +8,28 @@
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
 
+  html { font-synthesis: none; text-rendering: optimizeLegibility; }
+
+  button, a, input, [role='tab'], [role='switch'] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  [role='tab']:focus-visible,
+  [role='switch']:focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 3px;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .animate-fade-in { animation: fade-in 180ms ease-out both; }
+
   .app-theme-shell { position: relative; isolation: isolate; }
 
   .app-theme-shell::before,
@@ -35,6 +57,16 @@
   html.dark .app-theme-shell::before { opacity: 0; }
   html.dark .app-theme-shell::after { opacity: 1; }
 
+  .range-hit-area {
+    position: relative;
+    z-index: 1;
+    padding-top: 30px;
+    padding-bottom: 20px;
+    margin-top: -30px !important;
+    margin-bottom: -20px !important;
+    touch-action: pan-y;
+  }
+
   .packet-enter { animation: packet-enter 180ms ease-out both; }
   @keyframes packet-enter {
     from { opacity: 0; transform: translateY(5px) scale(0.92); }
@@ -42,7 +74,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .app-theme-shell::before, .app-theme-shell::after { transition-duration: 0.01ms; }
-    .packet-enter { animation: none; }
+    .animate-ping, .animate-pulse, .packet-enter { animation: none !important; }
   }
   
   html {

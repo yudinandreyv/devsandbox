@@ -216,7 +216,7 @@ function TrafficDiagram({
   const bw = Math.max(blueWeight, 0);
   const gw = Math.max(greenWeight, 0);
   return (
-    <div className="flex items-center justify-center gap-6 py-4 select-none">
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 py-4 select-none">
       {/* Internet */}
       <div className="flex flex-col items-center">
         <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-2xl shadow">
