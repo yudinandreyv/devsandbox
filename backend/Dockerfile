@@ -14,7 +14,7 @@ RUN addgroup --system --gid 1000 appgroup && \
     adduser --system --uid 1000 --ingroup appgroup appuser
 
 COPY --from=builder /install /usr/local
-COPY . /app
+COPY . /app/backend
 
 USER appuser
 

@@ -119,10 +119,10 @@ spec:
         fsGroup: 101
       containers:
         - name: frontend
-          image: ghcr.io/yudinandrey/sandbox-frontend:latest
+          image: devsandbox-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               name: http
           resources:
             requests:
@@ -134,13 +134,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 15
           readinessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 3
             periodSeconds: 10
           securityContext:
@@ -162,7 +162,7 @@ spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: 80
+          targetPort: 8080
       protocol: TCP
       name: http
   selector:
@@ -193,7 +193,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: api
-          image: ghcr.io/yudinandrey/sandbox-api:latest
+          image: devsandbox-api:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
@@ -225,11 +225,17 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
-            tmpfs:
-              - mountPath: /tmp
             capabilities:
               drop:
                 - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
 ---
 # 9. Service: API Backend
 apiVersion: v1
@@ -261,7 +267,7 @@ metadata:
 spec:
   parentRefs:
     - name: public-gateway
-      namespace: default
+      namespace: nginx-gateway
       sectionName: https
   hostnames:
     - "sandbox.gateaway.cloud"
@@ -282,38 +288,3 @@ spec:
       backendRefs:
         - name: frontend-sandbox
           port: 80
----
-# 11. Standard Ingress (Fallback compatibility for standard Ingress Controllers)
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: sandbox-ingress-fallback
-  namespace: sandbox
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/proxy-body-size: "2m"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - sandbox.gateaway.cloud
-      secretName: sandbox-tls-cert
-  rules:
-    - host: sandbox.gateaway.cloud
-      http:
-        paths:
-          - path: /api/v1
-            pathType: Prefix
-            backend:
-              service:
-                name: api-sandbox
-                port:
-                  number: 8000
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend-sandbox
-                port:
-                  number: 80
