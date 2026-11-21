@@ -9,12 +9,13 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     
     # Domain & Security
-    SITE_DOMAIN: str = "sandbox.gateaway.cloud"
+    SITE_DOMAIN: str = "gateaway.cloud"
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://sandbox.gateaway.cloud",
+        "https://gateaway.cloud",
+        "https://app.gateaway.cloud",
     ]
     SESSION_SECRET: str = "local-development-only-insecure-session-key"
     

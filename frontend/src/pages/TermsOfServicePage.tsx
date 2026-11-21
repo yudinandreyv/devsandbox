@@ -28,7 +28,7 @@ export const TermsOfServicePage: React.FC = () => {
             {isRu ? 'Условия использования (Terms of Service)' : 'Terms of Service'}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-mono">
-            Version 1.0.0 | Applicable to sandbox.gateaway.cloud
+            Version 1.0.0 | Applicable to gateaway.cloud
           </p>
         </div>
 
