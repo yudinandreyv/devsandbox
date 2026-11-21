@@ -87,7 +87,7 @@ metadata:
 data:
   APP_ENV: "production"
   SITE_DOMAIN: "gateaway.cloud"
-  CORS_ORIGINS: '["https://gateaway.cloud","https://app.gateaway.cloud"]'
+  CORS_ORIGINS: '["https://gateaway.cloud"]'
   DB_STATEMENT_TIMEOUT_MS: "1500"
   RATE_LIMIT_GLOBAL: "60/minute"
   RATE_LIMIT_PROBE: "15/minute"
