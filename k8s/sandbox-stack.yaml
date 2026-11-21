@@ -268,7 +268,7 @@ spec:
   parentRefs:
     - name: public-gateway
       namespace: nginx-gateway
-      sectionName: https
+      sectionName: http
   hostnames:
     - "sandbox.gateaway.cloud"
   rules:
