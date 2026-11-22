@@ -4,7 +4,7 @@ import { useI18n } from '../context/I18nContext';
 import { SeoHead } from '../components/SeoHead';
 
 export const PrivacyPolicyPage: React.FC = () => {
-  const { locale } = useI18n();
+  const { locale, navigate } = useI18n();
   const isRu = locale === 'ru';
 
   return (
@@ -33,7 +33,7 @@ export const PrivacyPolicyPage: React.FC = () => {
         </div>
 
         <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-3">
-          <Shield className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+          <Shield aria-hidden="true" className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
           <p className="leading-relaxed">
             {isRu
               ? 'Принцип конфиденциальности по умолчанию: DevSandbox не собирает персональные данные, пароли или email-адреса на этапе гостевой сессии. Вся телеметрия хранится локально в localStorage вашего браузера.'
@@ -56,7 +56,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           </h2>
           <p>
             {isRu
-              ? 'Мы используем localStorage браузера исключительно для сохранения ваших настроек (светлая/тёмная тема, выбранный язык en/ru) и технической телеметрии тренажёров (количество запусков проб, время на сайте, имитация прочитанных мегабайт).'
+              ? 'Мы используем localStorage браузера исключительно для сохранения ваших настроек (светлая/тёмная тема, выбранный язык en/ru) и технической телеметрии тренажёров (количество запусков проб и имитация прочитанных мегабайт).'
               : 'We utilize browser localStorage strictly to preserve user preferences (light/dark theme toggle, active locale) and sandbox performance counters (probes executed and simulated buffer scan volume).'}
           </p>
 
@@ -77,6 +77,15 @@ export const PrivacyPolicyPage: React.FC = () => {
               ? 'Вы имеете право в любой момент очистить всю сохранённую телеметрию нажатием кнопки «Сбросить телеметрию» в верхней панели либо очистив данные сайта в настройках браузера.'
               : 'You have the absolute right to erase all cached session metrics at any time by clicking "Reset Local Telemetry" in the status bar or clearing browser storage.'}
           </p>
+        <p className="text-xs sm:text-sm">
+          <a
+            href="/contact"
+            onClick={(event) => { event.preventDefault(); navigate('/contact'); }}
+            className="font-semibold text-brand-600 dark:text-sky-400 hover:underline"
+          >
+            {isRu ? 'Открыть страницу контактов' : 'Open the contact page'}
+          </a>
+        </p>
         </section>
       </div>
     </>

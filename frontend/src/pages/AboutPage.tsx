@@ -61,8 +61,8 @@ export const AboutPage: React.FC = () => {
             </h2>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
               {isRu
-                ? 'Строгий пользователь sandbox_readonly, таймаут SET LOCAL statement_timeout = 1500ms и синтаксический анализ AST через sqlglot до выполнения.'
-                : 'Unprivileged sandbox_readonly role, mandatory 1500ms statement timeout, and AST pre-validation via sqlglot.'}
+                ? 'Строгий пользователь sandbox_readonly, таймаут SET LOCAL statement_timeout = 1500ms и синтаксический анализ AST через pglast до выполнения.'
+                : 'Unprivileged sandbox_readonly role, mandatory 1500ms statement timeout, and AST pre-validation via pglast.'}
             </p>
           </div>
 
@@ -90,7 +90,7 @@ export const AboutPage: React.FC = () => {
 
           <div className="space-y-2 text-slate-600 dark:text-slate-400 leading-relaxed">
             <p>• <strong>Ingress & Routing:</strong> NGINX Gateway Fabric HTTPRoute bound to hostname <code>gateaway.cloud</code></p>
-            <p>• <strong>Frontend Tier:</strong> 2x Pods Nginx + React 18 SPA (Non-root user UID 101, Port 80)</p>
+            <p>• <strong>Frontend Tier:</strong> 2x Pods Nginx + React 18 SPA (Non-root user UID 101, Port 8080)</p>
             <p>• <strong>API Tier:</strong> 2x Pods FastAPI / Uvicorn (Non-root user UID 1000, Port 8000, read-only root filesystem)</p>
             <p>• <strong>Rate Limiter:</strong> SlowAPI IP-based memory sliding window + Redis distributed rate limiting</p>
           </div>

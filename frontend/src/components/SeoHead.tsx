@@ -35,6 +35,17 @@ export const SeoHead: React.FC<SeoHeadProps> = ({ title, description, canonicalP
       document.head.appendChild(canonicalLink);
     }
     canonicalLink.setAttribute('href', canonicalHref);
+
+    for (const hreflang of ['en', 'ru', 'x-default']) {
+      let alternate = document.querySelector(`link[rel="alternate"][hreflang="${hreflang}"]`);
+      if (!alternate) {
+        alternate = document.createElement('link');
+        alternate.setAttribute('rel', 'alternate');
+        alternate.setAttribute('hreflang', hreflang);
+        document.head.appendChild(alternate);
+      }
+      alternate.setAttribute('href', canonicalHref);
+    }
   }, [title, description, normalizedPath]);
 
   return null;

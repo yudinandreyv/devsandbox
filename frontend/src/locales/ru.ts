@@ -9,6 +9,8 @@ export const ru = {
     guestBadge: 'Гостевая сессия активна',
     signIn: 'Войти',
     signUp: 'Регистрация',
+    menu: 'Меню',
+    closeMenu: 'Закрыть меню',
   },
   telemetry: {
     badge: 'Телеметрия',
@@ -94,5 +96,17 @@ export const ru = {
     privacy: 'Политика конфиденциальности',
     terms: 'Условия использования',
     allRightsReserved: 'Все права защищены.',
+  },
+  contactPage: {
+    sending: 'Отправляем…',
+    error: 'Не удалось отправить сообщение. Используйте почту или GitHub.',
+    directEmail: 'Прямая почта',
+    githubProfile: 'Профиль GitHub',
+    opensNewTab: 'откроется в новой вкладке',
+  },
+  notFound: {
+    title: 'Страница не найдена',
+    description: 'Адрес не соответствует ни одной странице DevSandbox. Вернитесь к тренажёрам или воспользуйтесь навигацией.',
+    backHome: 'К тренажёрам',
   },
 };

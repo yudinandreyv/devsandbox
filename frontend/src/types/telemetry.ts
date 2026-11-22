@@ -19,8 +19,6 @@ export interface ExperimentRun {
 export interface TelemetryData {
   guestSessionId: string;
   guestToken: string;
-  sessionStartTime: number;
-  sessionDurationSeconds: number;
   probesExecuted: number;
   successfulRuns: number;
   failedRuns: number;

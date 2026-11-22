@@ -38,8 +38,6 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return {
       guestSessionId: generateUuid(),
       guestToken: '',
-      sessionStartTime: Date.now(),
-      sessionDurationSeconds: 0,
       probesExecuted: 0,
       successfulRuns: 0,
       failedRuns: 0,
@@ -127,8 +125,6 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const fresh: TelemetryData = {
       guestSessionId: generateUuid(),
       guestToken: '',
-      sessionStartTime: Date.now(),
-      sessionDurationSeconds: 0,
       probesExecuted: 0,
       successfulRuns: 0,
       failedRuns: 0,

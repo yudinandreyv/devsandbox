@@ -33,7 +33,7 @@ export const TermsOfServicePage: React.FC = () => {
         </div>
 
         <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          <AlertCircle aria-hidden="true" className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
           <p className="leading-relaxed">
             {isRu
               ? 'Правило добросовестного использования песочницы: сервис предназначен исключительно для образовательного тестирования, бенчмаркинга и изучения архитектурных концепций.'

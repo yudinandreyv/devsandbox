@@ -1,0 +1,53 @@
+Итоги работы по DevSandbox (gateaway.cloud)
+
+1. Доступность (закоммичено и задеплоено)
+- Исправлено дерево доступности: skip link, main#main-content, header/nav/footer landmarks, заголовки h1-h3, ARIA для табов, модалки, переключателей, форм и таблиц.
+- Закрыты находки верификатора: JSONB-переключатель в PgXrayTrainer получил role="switch"/aria-checked/имя; табы Python/PostgreSQL получили role="tablist"/tab/aria-selected и клавиатурную навигацию.
+- Проверка: npm run lint, npm run build — успешно.
+
+2. llms.txt и AI discovery (закоммичено и задеплоено)
+- Создан frontend/public/llms.txt в формате Markdown по llmstxt.org v2.
+- Созданы skill-документы: sync-async.md, pg-xray.md, blue-green.md.
+- Созданы /.well-known/ai-catalog.json (specVersion 0.9) и ai-catalog.schema.json.
+- В index.html добавлены <link rel="describedby"> и <link rel="ai-catalog">.
+- В nginx.conf добавлены locations с корректными Content-Type: text/plain, application/ai-catalog+json, text/markdown.
+- Прод-проверка: /llms.txt, /.well-known/ai-catalog.json, /ai-catalog.schema.json, /skills/*.md — HTTP 200.
+
+3. Безопасность (закоммичено и задеплоено)
+- Восстановлены security-заголовки на всех locations: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy.
+- Убраны 'unsafe-inline' и http://localhost:8000 из CSP; добавлен sha256-хэш единственного inline-скрипта темы.
+- Убраны inline media/onload у Google Fonts; скрипт темы переписан на современный const.
+- Исправлено описание sqlglot -> pglast в skill-доке.
+- Проверено на проде: заголовки доставляются на /, /llms.txt, /.well-known/ai-catalog.json, /skills/*.md.
+
+4. Деплой
+- Ветка: fix/trainer-light-theme-timeline.
+- Коммиты: 9a19554, 3057d78, 5ad7813, 870cbba, 0ce2ae7, be57980.
+- Финальный задеплоенный тег: 20261122-1354 (frontend + api).
+- k8s/sandbox-stack.yaml зафиксирован на 20261122-1354.
+- Проверено: /api/v1/health и /api/v1/items — HTTP 200; маршрутизация sandbox/inventory api-canary сохранена.
+
+5. Дополнительный анализ страниц (последняя серия правок, НЕ закоммичено и НЕ задеплоено)
+- About: исправлены фактические ошибки sqlglot -> pglast и Port 80 -> Port 8080.
+- Legal-страницы: иконки получили aria-hidden.
+- Contact: фокус переносится на success-заголовок, внешняя GitHub-ссылка получила aria-label о новой вкладке, подписи локализованы.
+- Contact: форма упрощена до одного обязательного поля email; добавлены submitting/error состояния и role="alert".
+- Навигация: добавлено мобильное disclosure-меню с aria-expanded/aria-controls и закрытием по Escape.
+- 404: неизвестные маршруты теперь показывают отдельную страницу вместо HomePage.
+- ExperimentHistory: метрики переведены на dl/dt/dd, пустое состояние получило role="status", иконки скрыты от скринридера.
+- Session Time удалён из ExperimentHistory, TelemetryData/TelemetryContext и RU-текста Privacy.
+- Privacy: добавлена ссылка на /contact в GDPR-разделе.
+- SeoHead: добавлены self-referencing hreflang en/ru и x-default по решению пользователя.
+- Backend: добавлен env-backed скелетон POST /api/v1/contact через Resend (backend/app/api/v1/contact.py), лимит 5/minute, настройки RESEND_API_KEY, CONTACT_FROM_EMAIL, CONTACT_TO_EMAIL, CONTACT_RATE_LIMIT.
+
+6. Проверки последней серии
+- npm run lint — успешно.
+- npm run build — успешно.
+- python3 -m py_compile для contact.py, router.py, config.py — успешно.
+- python3 -m pytest локально недоступен (нет модуля pytest).
+
+7. Осталось открытым
+- Маршрут /api/v1/contact не менялся по указанию пользователя; сейчас такой путь уходит в Inventory API, а не в DevSandbox API.
+- K8s Secret с Resend API key не создавался.
+- FROM/TO адреса не задавались; пользователь сообщил, что опишет обработку и отправку на бэкенде сам.
+- Последняя серия изменений остаётся в рабочей директории без коммита и деплоя.

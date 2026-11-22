@@ -9,6 +9,8 @@ export const en = {
     guestBadge: 'Guest Session Active',
     signIn: 'Sign In',
     signUp: 'Sign Up',
+    menu: 'Menu',
+    closeMenu: 'Close menu',
   },
   telemetry: {
     badge: 'Telemetry',
@@ -94,5 +96,17 @@ export const en = {
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
     allRightsReserved: 'All rights reserved.',
+  },
+  contactPage: {
+    sending: 'Sending…',
+    error: 'Could not send the message. Please use email or GitHub.',
+    directEmail: 'Direct Email',
+    githubProfile: 'GitHub Profile',
+    opensNewTab: 'opens in a new tab',
+  },
+  notFound: {
+    title: 'Page not found',
+    description: 'The address does not match any DevSandbox page. Return to the labs or use the navigation.',
+    backHome: 'Back to labs',
   },
 };

@@ -1,17 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Mail, Send, CheckCircle2, Github } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { SeoHead } from '../components/SeoHead';
 
 export const ContactPage: React.FC = () => {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const isRu = locale === 'ru';
   const [submitted, setSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const successRef = useRef<HTMLHeadingElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (submitted) successRef.current?.focus();
+  }, [submitted]);
+  const [formData, setFormData] = useState({ email: '' });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    setError('');
+    try {
+      const response = await fetch('/api/v1/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!response.ok) throw new Error('contact request failed');
+      setSubmitted(true);
+    } catch {
+      setError(t.contactPage.error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -47,7 +68,7 @@ export const ContactPage: React.FC = () => {
               <Mail aria-hidden="true" className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-500 font-mono">Direct Email</div>
+              <div className="text-xs text-slate-500 font-mono">{t.contactPage.directEmail}</div>
               <a
                 href="mailto:yudin.andrey.v@gmail.com"
                 className="text-sm font-semibold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400"
@@ -62,10 +83,11 @@ export const ContactPage: React.FC = () => {
               <Github aria-hidden="true" className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-500 font-mono">GitHub Profile</div>
+              <div className="text-xs text-slate-500 font-mono">{t.contactPage.githubProfile}</div>
               <a
                 href="https://github.com/yudinandreyv"
                 target="_blank"
+                aria-label={`${t.contactPage.githubProfile} — ${t.contactPage.opensNewTab}`}
                 rel="noopener noreferrer"
                 className="text-sm font-semibold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400"
               >
@@ -80,7 +102,7 @@ export const ContactPage: React.FC = () => {
           {submitted ? (
             <div className="py-10 text-center space-y-3">
               <CheckCircle2 aria-hidden="true" className="w-12 h-12 text-emerald-500 mx-auto" />
-              <h2 role="status" className="text-lg font-bold text-slate-900 dark:text-white">
+              <h2 ref={successRef} role="status" tabIndex={-1} className="text-lg font-bold text-slate-900 dark:text-white focus:outline-none">
                 {isRu ? 'Сообщение успешно отправлено!' : 'Message Sent Successfully!'}
               </h2>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
@@ -91,21 +113,6 @@ export const ContactPage: React.FC = () => {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="contact-name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  {isRu ? 'Ваше имя' : 'Your Name'}
-                </label>
-                <input
-                  id="contact-name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={isRu ? 'Андрей' : 'Alex'}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                />
-              </div>
-
               <div>
                 <label htmlFor="contact-email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {isRu ? 'Ваш Email' : 'Email Address'}
@@ -121,31 +128,15 @@ export const ContactPage: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label htmlFor="contact-message" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  {isRu ? 'Сообщение или идея тренажёра' : 'Message or Probe Proposal'}
-                </label>
-                <textarea
-                  id="contact-message"
-                  rows={4}
-                  required
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  placeholder={
-                    isRu
-                      ? 'Опишите ваш сценарий нагрузки или вопрос по архитектуре...'
-                      : 'Describe your load test scenario or architectural query...'
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none"
-                />
-              </div>
+              {error && <p role="alert" className="text-xs text-red-500">{error}</p>}
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                disabled={submitting}
+                className="w-full py-3 px-4 disabled:opacity-60 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <Send aria-hidden="true" className="w-4 h-4" />
-                <span>{isRu ? 'Отправить сообщение' : 'Send Message'}</span>
+                <span>{submitting ? t.contactPage.sending : (isRu ? 'Отправить сообщение' : 'Send Message')}</span>
               </button>
             </form>
           )}

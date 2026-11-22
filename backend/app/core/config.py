@@ -17,10 +17,16 @@ class Settings(BaseSettings):
         "https://gateaway.cloud",
     ]
     SESSION_SECRET: str = "local-development-only-insecure-session-key"
-    
+
+    # Contact delivery (Resend)
+    RESEND_API_KEY: str = ""
+    CONTACT_FROM_EMAIL: str = ""
+    CONTACT_TO_EMAIL: str = ""
+
     # Rate Limiting
     RATE_LIMIT_GLOBAL: str = "120/minute"
     RATE_LIMIT_PROBE: str = "20/minute"
+    CONTACT_RATE_LIMIT: str = "5/minute"
     
     # Database Sandbox Limits
     DB_STATEMENT_TIMEOUT_MS: int = 1500

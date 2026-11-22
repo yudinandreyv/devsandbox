@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Terminal, Moon, Sun, ShieldCheck } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Terminal, Moon, Sun, ShieldCheck, Menu, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useI18n } from '../context/I18nContext';
 import { TelemetryBadge } from './TelemetryBadge';
@@ -9,9 +9,20 @@ export const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { locale, switchLocale, t, navigate, currentPath } = useI18n();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isRu = locale === 'ru';
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isMenuOpen]);
+
   const go = (path: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
+    setIsMenuOpen(false);
     navigate(path);
   };
 
@@ -87,6 +98,17 @@ export const Navbar: React.FC = () => {
               </a>
             </nav>
 
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-nav"
+              aria-label={isMenuOpen ? t.nav.closeMenu : t.nav.menu}
+              className="lg:hidden w-8 h-8 shrink-0 rounded-full flex items-center justify-center border border-slate-300/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-200 cursor-pointer"
+            >
+              {isMenuOpen ? <X aria-hidden="true" className="w-4 h-4" /> : <Menu aria-hidden="true" className="w-4 h-4" />}
+            </button>
+
             {/* Language Switcher */}
             <div role="group" aria-label={isRu ? 'Язык интерфейса' : 'Interface language'} className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-md border border-slate-200 dark:border-slate-700/60 text-xs font-medium">
               <button
@@ -143,6 +165,32 @@ export const Navbar: React.FC = () => {
             </button>
           </div>
         </div>
+
+
+      <nav
+        id="mobile-nav"
+        aria-label={isRu ? 'Основная навигация' : 'Primary navigation'}
+        hidden={!isMenuOpen}
+        className="lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 px-4 py-3"
+      >
+        <ul className="flex flex-col gap-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+          <li>
+            <a href="/" onClick={go('/')} aria-current={currentPath === '/' ? 'page' : undefined} className="block px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              {t.nav.labs}
+            </a>
+          </li>
+          <li>
+            <a href="/about" onClick={go('/about')} aria-current={currentPath === '/about' ? 'page' : undefined} className="block px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              {t.nav.about}
+            </a>
+          </li>
+          <li>
+            <a href="/contact" onClick={go('/contact')} aria-current={currentPath === '/contact' ? 'page' : undefined} className="block px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              {t.nav.contact}
+            </a>
+          </li>
+        </ul>
+      </nav>
 
         {/* Mobile Sub-bar for Telemetry */}
         <div className="flex md:hidden items-center justify-end px-4 py-1.5 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 text-xs">
