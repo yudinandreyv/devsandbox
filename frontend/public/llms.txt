@@ -1,0 +1,38 @@
+# DevSandbox
+
+> Interactive developer sandbox at https://gateaway.cloud for studying FastAPI event-loop starvation, PostgreSQL shared_buffers and EXPLAIN (ANALYZE, BUFFERS), and Kubernetes blue/green traffic shifting through browser simulators backed by live HTTP probes.
+
+DevSandbox is a React 18 + TypeScript single-page application served from the apex domain `gateaway.cloud`. It provides three interactive trainers: Sync vs Async, PostgreSQL X-Ray, and Blue/Green CI/CD. The interface is available in English and Russian; the locale is stored in the browser and does not change the URL. Live probes are served by a FastAPI backend at `/api/v1/*` and run inside an isolated k3s `sandbox` namespace with a ResourceQuota.
+
+## Documentation
+
+- [DevSandbox home](https://gateaway.cloud/): Entry point with the interactive trainers, architecture decision matrix, and technical deep-dive article.
+- [Architecture and isolation](https://gateaway.cloud/about): k3s namespace quotas, read-only PostgreSQL role, AST validation, and CLS=0 guarantees.
+- [Contact and community](https://gateaway.cloud/contact): Email and GitHub contacts for probe proposals and bug reports.
+- [Privacy policy](https://gateaway.cloud/privacy-policy): Local telemetry storage and guest session handling.
+- [Terms of service](https://gateaway.cloud/terms-of-service): Acceptable use of the sandbox and its live probes.
+
+## Trainers
+
+- [Sync vs Async skill](https://gateaway.cloud/skills/sync-async.md): How the simulator and live I/O benchmark demonstrate event-loop blocking in `async def`.
+- [PostgreSQL X-Ray skill](https://gateaway.cloud/skills/pg-xray.md): How TABLESAMPLE, column projection, and scan strategies affect buffer reads.
+- [Blue/Green CI/CD skill](https://gateaway.cloud/skills/blue-green.md): How weighted HTTPRoute shifts, canaries, and rollback scenarios avoid dropped packets.
+
+## Machine-readable metadata
+
+- [AI Catalog](https://gateaway.cloud/.well-known/ai-catalog.json): AI Catalog v0.9 document listing the site's agent-readable skills.
+- [AI Catalog JSON Schema](https://gateaway.cloud/ai-catalog.schema.json): JSON Schema for validating the AI Catalog document.
+- [llms.txt](https://gateaway.cloud/llms.txt): This file, following the llmstxt.org v2 format.
+- [Sitemap](https://gateaway.cloud/sitemap.xml): Complete list of indexable HTML pages.
+- [Robots policy](https://gateaway.cloud/robots.txt): Crawler access rules.
+
+## API
+
+- [Health](https://gateaway.cloud/api/v1/health): Liveness status of the sandbox API.
+- [Readiness](https://gateaway.cloud/api/v1/ready): Readiness status of the sandbox API.
+- [Probe catalog](https://gateaway.cloud/api/v1/probe/catalog): Available load-test scenarios.
+- [Metrics](https://gateaway.cloud/api/v1/metrics): Telemetry counters for the sandbox API.
+
+## Optional
+
+- [GitHub repository](https://github.com/yudinandreyv/devsandbox): Source code, deployment scripts, and issue tracker.

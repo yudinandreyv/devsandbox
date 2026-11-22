@@ -10,11 +10,6 @@ export const en = {
     signIn: 'Sign In',
     signUp: 'Sign Up',
   },
-  stopwatch: {
-    title: 'Session Duration',
-    running: 'Running',
-    resetTimer: 'Reset session timer',
-  },
   telemetry: {
     badge: 'Telemetry',
     probes: 'Probes Run',

@@ -42,25 +42,27 @@ export const TelemetryBadge: React.FC = () => {
   return (
     <div className="relative" ref={containerRef}>
       <button
+        type="button"
         onClick={() => setIsOpen((open) => !open)}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
+        aria-label={t.telemetry.badge}
         className="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-xs font-mono text-slate-700 dark:text-slate-300 transition-colors"
       >
         <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400">
-          <Activity className="w-3.5 h-3.5" />
+          <Activity aria-hidden="true" className="w-3.5 h-3.5" />
           <span>{telemetry.probesExecuted}</span>
         </span>
         <span className="text-slate-400">|</span>
         <span className="flex items-center space-x-1 text-sky-600 dark:text-sky-400">
-          <Database className="w-3.5 h-3.5" />
+          <Database aria-hidden="true" className="w-3.5 h-3.5" />
           <span>{formatBytes(telemetry.bytesScannedKb)}</span>
         </span>
         {telemetry.lastPingLatencyMs !== null && (
           <>
             <span className="text-slate-400">|</span>
             <span className="flex items-center space-x-1 text-amber-600 dark:text-amber-400">
-              <Zap className="w-3.5 h-3.5" />
+              <Zap aria-hidden="true" className="w-3.5 h-3.5" />
               <span>{telemetry.lastPingLatencyMs}ms</span>
             </span>
           </>
@@ -69,17 +71,19 @@ export const TelemetryBadge: React.FC = () => {
 
       {/* Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-4 z-50 text-xs">
+        <div role="dialog" aria-label={t.telemetry.badge} className="absolute right-0 mt-2 w-72 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-4 z-50 text-xs">
           <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100 dark:border-slate-800">
             <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-              <Activity className="w-4 h-4 text-brand-500" />
+              <Activity aria-hidden="true" className="w-4 h-4 text-brand-500" />
               {t.telemetry.badge} (localStorage)
             </span>
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
+              aria-label={t.authModal.closeBtn}
               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
-              <X className="w-3.5 h-3.5" />
+              <X aria-hidden="true" className="w-3.5 h-3.5" />
             </button>
           </div>
 
@@ -101,12 +105,14 @@ export const TelemetryBadge: React.FC = () => {
               <span className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
                 {telemetry.lastPingLatencyMs ?? '--'} ms
                 <button
+                  type="button"
                   onClick={handlePing}
                   disabled={isPinging}
+                  aria-label="Ping API"
                   className="p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400"
                   title="Ping API"
                 >
-                  <RefreshCw className={`w-3 h-3 ${isPinging ? 'animate-spin' : ''}`} />
+                  <RefreshCw aria-hidden="true" className={`w-3 h-3 ${isPinging ? 'animate-spin' : ''}`} />
                 </button>
               </span>
             </div>
@@ -123,6 +129,7 @@ export const TelemetryBadge: React.FC = () => {
               ✓ {t.telemetry.synced}
             </span>
             <button
+              type="button"
               onClick={() => {
                 resetTelemetry();
                 setIsOpen(false);

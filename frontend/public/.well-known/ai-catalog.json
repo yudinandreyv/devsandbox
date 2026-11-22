@@ -1,0 +1,45 @@
+{
+  "specVersion": "0.9",
+  "host": {
+    "displayName": "DevSandbox",
+    "identifier": "gateaway.cloud",
+    "documentationUrl": "https://gateaway.cloud/about",
+    "logoUrl": "https://gateaway.cloud/favicon.svg"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:gateaway.cloud:sync-async-trainer:skill",
+      "displayName": "Sync vs Async Event Loop Trainer",
+      "type": "application/agent-skills+md",
+      "description": "Skill metadata for the FastAPI event-loop starvation simulator and the live I/O benchmark.",
+      "url": "https://gateaway.cloud/skills/sync-async.md",
+      "tags": ["fastapi", "asyncio", "highload", "benchmark"],
+      "updatedAt": "2026-11-22T00:00:00Z"
+    },
+    {
+      "identifier": "urn:air:gateaway.cloud:pg-xray-trainer:skill",
+      "displayName": "PostgreSQL X-Ray Trainer",
+      "type": "application/agent-skills+md",
+      "description": "Skill metadata for PostgreSQL buffer-scan, TABLESAMPLE, and scan-strategy analysis.",
+      "url": "https://gateaway.cloud/skills/pg-xray.md",
+      "tags": ["postgresql", "explain", "buffers", "performance"],
+      "updatedAt": "2026-11-22T00:00:00Z"
+    },
+    {
+      "identifier": "urn:air:gateaway.cloud:blue-green-trainer:skill",
+      "displayName": "Blue/Green CI/CD Trainer",
+      "type": "application/agent-skills+md",
+      "description": "Skill metadata for weighted HTTPRoute shifts, canaries, and zero-dropped-packet rollbacks.",
+      "url": "https://gateaway.cloud/skills/blue-green.md",
+      "tags": ["kubernetes", "cicd", "canary", "blue-green"],
+      "updatedAt": "2026-11-22T00:00:00Z"
+    }
+  ],
+  "extensions": {
+    "discovery": {
+      "llms": "https://gateaway.cloud/llms.txt",
+      "schema": "https://gateaway.cloud/ai-catalog.schema.json",
+      "sitemap": "https://gateaway.cloud/sitemap.xml"
+    }
+  }
+}

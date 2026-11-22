@@ -248,10 +248,10 @@ export const PgXrayTrainer: React.FC = () => {
       {/* 2. PRESETS BAR */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <Sparkles aria-hidden="true" className="w-3.5 h-3.5 text-brand-500" />
             <span>{isRu ? 'Готовые сценарии нагрузки:' : 'Quick Presets:'}</span>
-          </label>
+          </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {PRESETS.map((preset) => {
@@ -310,6 +310,7 @@ export const PgXrayTrainer: React.FC = () => {
             </div>
             <input
               type="range"
+              aria-label={isRu ? 'Размер выборки TABLESAMPLE' : 'TABLESAMPLE size'}
               min="10"
               max="100"
               step="10"
@@ -339,6 +340,7 @@ export const PgXrayTrainer: React.FC = () => {
             </div>
             <input
               type="range"
+              aria-label={isRu ? 'Период данных' : 'Time window'}
               min="1"
               max="24"
               step="1"
@@ -778,12 +780,13 @@ export const PgXrayTrainer: React.FC = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
+            <caption className="sr-only">{isRu ? 'Сравнение стратегий сканирования PostgreSQL' : 'PostgreSQL scan strategy comparison'}</caption>
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
-                <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">Параметр</th>
-                <th className="p-3 font-semibold text-rose-600 dark:text-rose-400">Seq Scan (Последовательный)</th>
-                <th className="p-3 font-semibold text-emerald-600 dark:text-emerald-400">Index Scan (Точечный B-Tree)</th>
-                <th className="p-3 font-semibold text-sky-600 dark:text-sky-400">Bitmap Heap Scan (Битовая карта)</th>
+                <th scope="col" className="p-3 font-semibold text-slate-700 dark:text-slate-300">Параметр</th>
+                <th scope="col" className="p-3 font-semibold text-rose-600 dark:text-rose-400">Seq Scan (Последовательный)</th>
+                <th scope="col" className="p-3 font-semibold text-emerald-600 dark:text-emerald-400">Index Scan (Точечный B-Tree)</th>
+                <th scope="col" className="p-3 font-semibold text-sky-600 dark:text-sky-400">Bitmap Heap Scan (Битовая карта)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-600 dark:text-slate-300">

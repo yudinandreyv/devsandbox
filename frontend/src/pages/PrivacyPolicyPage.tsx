@@ -57,7 +57,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           <p>
             {isRu
               ? 'Мы используем localStorage браузера исключительно для сохранения ваших настроек (светлая/тёмная тема, выбранный язык en/ru) и технической телеметрии тренажёров (количество запусков проб, время на сайте, имитация прочитанных мегабайт).'
-              : 'We utilize browser localStorage strictly to preserve user preferences (light/dark theme toggle, active locale) and sandbox performance counters (probes executed, elapsed stopwatch time, simulated buffer scan volume).'}
+              : 'We utilize browser localStorage strictly to preserve user preferences (light/dark theme toggle, active locale) and sandbox performance counters (probes executed and simulated buffer scan volume).'}
           </p>
 
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white pt-4">

@@ -9,6 +9,11 @@ export const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { locale, switchLocale, t, navigate, currentPath } = useI18n();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const isRu = locale === 'ru';
+  const go = (path: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    navigate(path);
+  };
 
   return (
     <>
@@ -16,12 +21,14 @@ export const Navbar: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Left: Branding */}
           <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigate('/')}
+            <a
+              href="/"
+              onClick={go('/')}
+              aria-label={`${t.brand} — ${t.nav.labs}`}
               className="flex items-center space-x-2.5 text-left group"
             >
               <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-brand-600 to-sky-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
-                <Terminal className="w-5 h-5" />
+                <Terminal aria-hidden="true" className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-1.5">
@@ -36,7 +43,7 @@ export const Navbar: React.FC = () => {
                   gateaway.cloud
                 </p>
               </div>
-            </button>
+            </a>
           </div>
 
           {/* Center: LocalStorage Telemetry */}
@@ -47,37 +54,46 @@ export const Navbar: React.FC = () => {
           {/* Right: Actions, Language, Theme, Guest Auth */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Nav Links */}
-            <nav className="hidden lg:flex items-center space-x-1 mr-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-              <button
-                onClick={() => navigate('/')}
+            <nav aria-label={isRu ? 'Основная навигация' : 'Primary navigation'} className="hidden lg:flex items-center space-x-1 mr-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <a
+                href="/"
+                onClick={go('/')}
+                aria-current={currentPath === '/' ? 'page' : undefined}
                 className={`px-2.5 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
                   currentPath === '/' ? 'text-brand-600 dark:text-brand-400 font-semibold' : ''
                 }`}
               >
                 {t.nav.labs}
-              </button>
-              <button
-                onClick={() => navigate('/about')}
+              </a>
+              <a
+                href="/about"
+                onClick={go('/about')}
+                aria-current={currentPath === '/about' ? 'page' : undefined}
                 className={`px-2.5 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
                   currentPath === '/about' ? 'text-brand-600 dark:text-brand-400 font-semibold' : ''
                 }`}
               >
                 {t.nav.about}
-              </button>
-              <button
-                onClick={() => navigate('/contact')}
+              </a>
+              <a
+                href="/contact"
+                onClick={go('/contact')}
+                aria-current={currentPath === '/contact' ? 'page' : undefined}
                 className={`px-2.5 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
                   currentPath === '/contact' ? 'text-brand-600 dark:text-brand-400 font-semibold' : ''
                 }`}
               >
                 {t.nav.contact}
-              </button>
+              </a>
             </nav>
 
             {/* Language Switcher */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-md border border-slate-200 dark:border-slate-700/60 text-xs font-medium">
+            <div role="group" aria-label={isRu ? 'Язык интерфейса' : 'Interface language'} className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-md border border-slate-200 dark:border-slate-700/60 text-xs font-medium">
               <button
+                type="button"
                 onClick={() => switchLocale('en')}
+                aria-pressed={locale === 'en'}
+                lang="en"
                 className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${
                   locale === 'en'
                     ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-sky-300 shadow-xs font-bold'
@@ -87,7 +103,10 @@ export const Navbar: React.FC = () => {
                 EN
               </button>
               <button
+                type="button"
                 onClick={() => switchLocale('ru')}
+                aria-pressed={locale === 'ru'}
+                lang="ru"
                 className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${
                   locale === 'ru'
                     ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-sky-300 shadow-xs font-bold'
@@ -100,20 +119,25 @@ export const Navbar: React.FC = () => {
 
             {/* Theme Toggle */}
             <button
+              type="button"
               onClick={toggleTheme}
+              aria-pressed={theme === 'dark'}
               className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center backdrop-blur-md bg-slate-200/70 dark:bg-slate-800/70 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300/60 dark:border-slate-700/60 text-slate-700 dark:text-amber-300 transition-all duration-300 shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
-              title={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
-              aria-label="Toggle Theme"
+              title={theme === 'dark' ? (isRu ? 'Включить светлую тему' : 'Switch to light theme') : (isRu ? 'Включить тёмную тему' : 'Switch to dark theme')}
+              aria-label={theme === 'dark' ? (isRu ? 'Включить светлую тему' : 'Switch to light theme') : (isRu ? 'Включить тёмную тему' : 'Switch to dark theme')}
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 transition-transform duration-300 rotate-0 hover:rotate-45" /> : <Moon className="w-4 h-4 transition-transform duration-300 -rotate-12 hover:rotate-0" />}
+              {theme === 'dark' ? <Sun aria-hidden="true" className="w-4 h-4 transition-transform duration-300 rotate-0 hover:rotate-45" /> : <Moon aria-hidden="true" className="w-4 h-4 transition-transform duration-300 -rotate-12 hover:rotate-0" />}
             </button>
 
             {/* Guest Session Button / Auth Stub */}
             <button
+              type="button"
               onClick={() => setIsAuthOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={isAuthOpen}
               className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white text-xs font-medium transition-all shadow-xs"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" />
+              <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" />
               <span className="hidden sm:inline">{t.nav.guestBadge}</span>
               <span className="sm:hidden">{t.nav.signIn}</span>
             </button>

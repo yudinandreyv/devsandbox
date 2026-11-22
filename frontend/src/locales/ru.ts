@@ -10,11 +10,6 @@ export const ru = {
     signIn: 'Войти',
     signUp: 'Регистрация',
   },
-  stopwatch: {
-    title: 'Время сессии',
-    running: 'Идёт отсчёт',
-    resetTimer: 'Сбросить таймер сессии',
-  },
   telemetry: {
     badge: 'Телеметрия',
     probes: 'Запусков проб',

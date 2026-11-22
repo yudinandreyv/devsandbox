@@ -392,11 +392,13 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
           >
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => { setMode('sync'); setIsBrokenEventLoop(false); }}
+                aria-pressed={mode === 'sync'}
                 title={isRu ? 'Один worker выполняет один запрос за раз' : 'Each worker handles one request at a time'}
                 className={'rounded-lg border px-2 py-2 text-[11px] font-semibold transition-colors ' + (mode === 'sync' ? 'border-amber-400/60 bg-amber-500/15 text-amber-200' : 'border-slate-700 bg-slate-950/50 text-slate-400 hover:text-slate-200')}>
                 <Server className="w-3.5 h-3.5 mx-auto mb-1" />Sync · 4
               </button>
               <button type="button" onClick={() => setMode('async')}
+                aria-pressed={mode === 'async'}
                 title={isRu ? 'await освобождает цикл событий на время I/O' : 'await lets the event loop handle other I/O tasks'}
                 className={'rounded-lg border px-2 py-2 text-[11px] font-semibold transition-colors ' + (mode === 'async' ? 'border-cyan-400/60 bg-cyan-500/15 text-cyan-200' : 'border-slate-700 bg-slate-950/50 text-slate-400 hover:text-slate-200')}>
                 <Zap className="w-3.5 h-3.5 mx-auto mb-1" />Async · I/O
@@ -434,6 +436,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
             <div className="grid grid-cols-3 gap-1">
               {(['steady', 'ramp', 'burst'] as TrafficProfile[]).map((profile) => (
                 <button key={profile} type="button" onClick={() => setTrafficProfile(profile)}
+                  aria-pressed={trafficProfile === profile}
                   className={'rounded-md px-1.5 py-1.5 text-[10px] font-medium transition-colors ' + (trafficProfile === profile ? 'bg-slate-700 text-white' : 'bg-slate-950/60 text-slate-400 hover:text-slate-200')}>
                   {profile === 'steady' ? (isRu ? 'Ровно' : 'Steady') : profile === 'ramp' ? (isRu ? 'Разгон' : 'Ramp') : (isRu ? 'Пики' : 'Bursts')}
                 </button>
@@ -444,6 +447,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
           </div>
           <div className="border-t border-slate-800 pt-3">
             <button type="button" onClick={() => setIsBrokenEventLoop((previous) => !previous)} disabled={mode !== 'async'}
+              aria-pressed={isBrokenEventLoop}
               title={isRu ? 'Показывает эффект блокирующего time.sleep() внутри async def' : 'Shows blocking time.sleep() inside async def'}
               className={'w-full rounded-lg border px-3 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ' + (isBrokenEventLoop ? 'border-red-500/60 bg-red-500/15 text-red-200' : 'border-slate-700 bg-slate-950/50 text-slate-300 hover:border-red-500/50')}>
               <span className="flex items-center gap-2 text-[11px] font-semibold"><Flame className="w-3.5 h-3.5 text-amber-400" />{isRu ? 'Блокирующий time.sleep()' : 'Blocking time.sleep()'}<span className="ml-auto">{isBrokenEventLoop ? 'ON' : 'OFF'}</span></span>
@@ -498,7 +502,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
           <div className="grid grid-cols-1 md:grid-cols-[0.8fr_1.1fr_2fr_0.8fr] gap-2 items-stretch">
             <div className="rounded-xl border border-cyan-500/25 bg-cyan-950/15 p-3 min-w-0">
               <div className="flex justify-between items-center text-[10px] font-mono uppercase text-cyan-200"><span>{isRu ? 'Вход' : 'Ingress'}</span><span>{concurrency}/s</span></div>
-              <div className="mt-3 flex h-9 items-center gap-1 overflow-hidden" aria-label={isRu ? 'Поступающие запросы' : 'Incoming requests'}>
+              <div role="img" className="mt-3 flex h-9 items-center gap-1 overflow-hidden" aria-label={isRu ? 'Поступающие запросы' : 'Incoming requests'}>
                 {Array.from({ length: Math.min(12, Math.max(4, Math.round(concurrency / 5))) }, (_, index) => (
                   <span key={index} className="packet-enter h-5 w-3 shrink-0 rounded-sm bg-cyan-400/80 shadow-sm shadow-cyan-400/30" style={{ animationDelay: String(index * 35) + 'ms' }} />
                 ))}

@@ -44,7 +44,7 @@ export const ContactPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center shrink-0">
-              <Mail className="w-5 h-5" />
+              <Mail aria-hidden="true" className="w-5 h-5" />
             </div>
             <div>
               <div className="text-xs text-slate-500 font-mono">Direct Email</div>
@@ -59,7 +59,7 @@ export const ContactPage: React.FC = () => {
 
           <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-slate-900/10 dark:bg-white/10 text-slate-900 dark:text-white flex items-center justify-center shrink-0">
-              <Github className="w-5 h-5" />
+              <Github aria-hidden="true" className="w-5 h-5" />
             </div>
             <div>
               <div className="text-xs text-slate-500 font-mono">GitHub Profile</div>
@@ -79,10 +79,10 @@ export const ContactPage: React.FC = () => {
         <div className="p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 shadow-sm">
           {submitted ? (
             <div className="py-10 text-center space-y-3">
-              <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              <CheckCircle2 aria-hidden="true" className="w-12 h-12 text-emerald-500 mx-auto" />
+              <h2 role="status" className="text-lg font-bold text-slate-900 dark:text-white">
                 {isRu ? 'Сообщение успешно отправлено!' : 'Message Sent Successfully!'}
-              </h3>
+              </h2>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
                 {isRu
                   ? 'Спасибо за обратную связь. Мы ответим на указанный email в течение 24 часов.'
@@ -92,10 +92,11 @@ export const ContactPage: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label htmlFor="contact-name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {isRu ? 'Ваше имя' : 'Your Name'}
                 </label>
                 <input
+                  id="contact-name"
                   type="text"
                   required
                   value={formData.name}
@@ -106,10 +107,11 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label htmlFor="contact-email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {isRu ? 'Ваш Email' : 'Email Address'}
                 </label>
                 <input
+                  id="contact-email"
                   type="email"
                   required
                   value={formData.email}
@@ -120,10 +122,11 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label htmlFor="contact-message" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {isRu ? 'Сообщение или идея тренажёра' : 'Message or Probe Proposal'}
                 </label>
                 <textarea
+                  id="contact-message"
                   rows={4}
                   required
                   value={formData.message}
@@ -141,7 +144,7 @@ export const ContactPage: React.FC = () => {
                 type="submit"
                 className="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <Send className="w-4 h-4" />
+                <Send aria-hidden="true" className="w-4 h-4" />
                 <span>{isRu ? 'Отправить сообщение' : 'Send Message'}</span>
               </button>
             </form>

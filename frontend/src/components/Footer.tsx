@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center space-x-2">
               <div className="w-7 h-7 rounded-md bg-brand-600 flex items-center justify-center text-white">
-                <Terminal className="w-4 h-4" />
+                <Terminal aria-hidden="true" className="w-4 h-4" />
               </div>
               <span className="font-extrabold text-base text-slate-900 dark:text-white">
                 {t.brand}
@@ -23,65 +23,70 @@ export const Footer: React.FC = () => {
               {t.footer.desc}
             </p>
             <div className="flex items-center gap-2 pt-2 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
-              <Shield className="w-3.5 h-3.5" />
+              <Shield aria-hidden="true" className="w-3.5 h-3.5" />
               <span>Kubernetes Isolation: namespace sandbox (ResourceQuota active)</span>
             </div>
           </div>
 
           {/* Col 2: Navigation Links */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+          <nav aria-label={t.footer.links} className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
               {t.footer.links}
-            </h4>
+            </h3>
             <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
               <li>
-                <button
-                  onClick={() => navigate('/')}
+                <a
+                  href="/"
+                  onClick={(event) => { event.preventDefault(); navigate('/'); }}
                   className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                 >
                   {t.nav.labs}
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/about')}
+                <a
+                  href="/about"
+                  onClick={(event) => { event.preventDefault(); navigate('/about'); }}
                   className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                 >
                   {t.footer.about}
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/contact')}
+                <a
+                  href="/contact"
+                  onClick={(event) => { event.preventDefault(); navigate('/contact'); }}
                   className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                 >
                   {t.footer.contact}
-                </button>
+                </a>
               </li>
             </ul>
-          </div>
+          </nav>
 
           {/* Col 3: Legal & Privacy */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
+          <nav aria-label={t.footer.legal} className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-200">
               {t.footer.legal}
-            </h4>
+            </h3>
             <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
               <li>
-                <button
-                  onClick={() => navigate('/privacy-policy')}
+                <a
+                  href="/privacy-policy"
+                  onClick={(event) => { event.preventDefault(); navigate('/privacy-policy'); }}
                   className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                 >
                   {t.footer.privacy}
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/terms-of-service')}
+                <a
+                  href="/terms-of-service"
+                  onClick={(event) => { event.preventDefault(); navigate('/terms-of-service'); }}
                   className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                 >
                   {t.footer.terms}
-                </button>
+                </a>
               </li>
               <li>
                 <a
@@ -90,12 +95,12 @@ export const Footer: React.FC = () => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                 >
-                  <Github className="w-3.5 h-3.5" />
+                  <Github aria-hidden="true" className="w-3.5 h-3.5" />
                   <span>GitHub Repository</span>
                 </a>
               </li>
             </ul>
-          </div>
+          </nav>
         </div>
 
         <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-500 dark:text-slate-500">

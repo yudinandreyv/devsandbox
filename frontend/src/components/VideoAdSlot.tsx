@@ -9,7 +9,7 @@ export const VideoAdSlot: React.FC = () => {
   const [isMuted, setIsMuted] = useState(true);
 
   return (
-    <div
+    <aside
       className="w-full min-h-[260px] rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-900 text-white p-5 flex flex-col justify-between overflow-hidden shadow-sm relative group"
       aria-label="Sponsored Outstream Video Slot"
     >
@@ -24,7 +24,7 @@ export const VideoAdSlot: React.FC = () => {
           </span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
-          <ShieldCheck className="w-3.5 h-3.5" />
+          <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5" />
           <span>Bot Safe Mode</span>
         </div>
       </div>
@@ -34,18 +34,20 @@ export const VideoAdSlot: React.FC = () => {
         {!isPlaying ? (
           <div className="space-y-3">
             <button
+              type="button"
               onClick={() => setIsPlaying(true)}
               className="w-14 h-14 rounded-full bg-brand-500 hover:bg-brand-400 text-white flex items-center justify-center mx-auto shadow-lg shadow-brand-500/30 transition-transform hover:scale-105 cursor-pointer"
-              title="Play Video"
+              title={isRu ? 'Воспроизвести видео' : 'Play video'}
+              aria-label={isRu ? 'Воспроизвести видео' : 'Play video'}
             >
-              <Play className="w-6 h-6 ml-1 fill-white" />
+              <Play aria-hidden="true" className="w-6 h-6 ml-1 fill-white" />
             </button>
             <div>
-              <h4 className="text-sm font-bold text-white">
+              <h3 className="text-sm font-bold text-white">
                 {isRu
                   ? 'Пока страницы индексируются: видео-разбор Event Loop в Python'
                   : 'While indexing in Google: Python Event Loop Architecture Breakdown'}
-              </h4>
+              </h3>
               <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
                 {isRu
                   ? '3-минутный интерактивный разбор: почему `async def` с `time.sleep` роняет сервер и как работает AnyIO тредпул.'
@@ -61,12 +63,16 @@ export const VideoAdSlot: React.FC = () => {
             </p>
             <div className="flex items-center gap-2 pt-2">
               <button
+                type="button"
                 onClick={() => setIsMuted(!isMuted)}
+                aria-pressed={isMuted}
+                aria-label={isMuted ? (isRu ? 'Включить звук' : 'Unmute') : (isRu ? 'Выключить звук' : 'Mute')}
                 className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
               >
-                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                {isMuted ? <VolumeX aria-hidden="true" className="w-4 h-4" /> : <Volume2 aria-hidden="true" className="w-4 h-4" />}
               </button>
               <button
+                type="button"
                 onClick={() => setIsPlaying(false)}
                 className="px-3 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
               >
@@ -80,7 +86,7 @@ export const VideoAdSlot: React.FC = () => {
       {/* Footer Info */}
       <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800 pt-3 z-10">
         <span className="flex items-center gap-1">
-          <Sparkles className="w-3.5 h-3.5 text-brand-400" />
+          <Sparkles aria-hidden="true" className="w-3.5 h-3.5 text-brand-400" />
           {isRu ? 'Партнёрский блок: Hetzner / Google Cloud / Cloudflare' : 'Partner: Cloudflare / Hetzner Cloud'}
         </span>
         <a
@@ -90,9 +96,9 @@ export const VideoAdSlot: React.FC = () => {
           className="hover:text-white flex items-center gap-1 font-mono transition-colors"
         >
           <span>GitHub</span>
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink aria-hidden="true" className="w-3 h-3" />
         </a>
       </div>
-    </div>
+    </aside>
   );
 };

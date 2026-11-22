@@ -31,10 +31,11 @@ export const ExpertAnalysisTable: React.FC<ExpertAnalysisTableProps> = () => {
         </div>
 
         <button
+          type="button"
           onClick={handleScrollToVisualizer}
           className="shrink-0 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer w-fit"
         >
-          <ArrowUp className="w-3.5 h-3.5" />
+          <ArrowUp aria-hidden="true" className="w-3.5 h-3.5" />
           <span>К интерактивному стенду</span>
         </button>
       </div>
@@ -42,18 +43,19 @@ export const ExpertAnalysisTable: React.FC<ExpertAnalysisTableProps> = () => {
       {/* MATRIX TABLE */}
       <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 shadow-xs">
         <table className="w-full text-left border-collapse text-xs sm:text-sm">
+          <caption className="sr-only">Сводная матрица: синхронная и асинхронная модели в продакшне</caption>
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-mono text-xs uppercase tracking-wider">
-              <th className="py-3 px-4 w-1/4">Параметр архитектуры</th>
-              <th className="py-3 px-4 w-3/8 text-amber-700 dark:text-amber-400">
+              <th scope="col" className="py-3 px-4 w-1/4">Параметр архитектуры</th>
+              <th scope="col" className="py-3 px-4 w-3/8 text-amber-700 dark:text-amber-400">
                 <div className="flex items-center gap-1.5">
-                  <Server className="w-4 h-4" />
+                  <Server aria-hidden="true" className="w-4 h-4" />
                   <span>Синхронно (Gunicorn / WSGI)</span>
                 </div>
               </th>
-              <th className="py-3 px-4 w-3/8 text-cyan-700 dark:text-cyan-400">
+              <th scope="col" className="py-3 px-4 w-3/8 text-cyan-700 dark:text-cyan-400">
                 <div className="flex items-center gap-1.5">
-                  <Zap className="w-4 h-4" />
+                  <Zap aria-hidden="true" className="w-4 h-4" />
                   <span>Асинхронно (FastAPI / Uvicorn / asyncio)</span>
                 </div>
               </th>

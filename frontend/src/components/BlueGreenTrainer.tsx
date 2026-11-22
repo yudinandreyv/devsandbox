@@ -382,7 +382,9 @@ export default function BlueGreenTrainer() {
         ).map((s) => (
           <button
             key={s.id}
+            type="button"
             onClick={() => setScenario(s.id)}
+            aria-pressed={scenario === s.id}
             className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
               scenario === s.id
                 ? "bg-purple-600 text-white shadow-md ring-2 ring-purple-400/50"
@@ -406,7 +408,7 @@ export default function BlueGreenTrainer() {
       {/* Weight slider */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+          <label htmlFor="traffic-weight" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
             Traffic weight
           </label>
           <div className="flex gap-3 text-sm font-mono font-bold">
@@ -429,7 +431,9 @@ export default function BlueGreenTrainer() {
         </div>
 
         <input
+          id="traffic-weight"
           type="range"
+          aria-label="Blue traffic weight"
           min={0}
           max={100}
           step={5}
@@ -443,6 +447,7 @@ export default function BlueGreenTrainer() {
         </div>
 
         <button
+          type="button"
           onClick={handleShift}
           disabled={shifting || loading}
           className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold transition-colors"
