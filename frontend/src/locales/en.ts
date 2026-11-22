@@ -97,7 +97,6 @@ export const en = {
     signOut: 'Sign out',
     signedOut: 'Signed out.',
     title: 'Account access',
-    authNote: 'Accounts are served by the Inventory API.',
     closeBtn: 'Close',
   },
   footer: {

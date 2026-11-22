@@ -97,7 +97,6 @@ export const ru = {
     signOut: 'Выйти',
     signedOut: 'Вы вышли из аккаунта.',
     title: 'Доступ к аккаунту',
-    authNote: 'Аккаунты обслуживаются Inventory API.',
     closeBtn: 'Закрыть',
   },
   footer: {

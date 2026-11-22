@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { UserCheck, X, Lock } from 'lucide-react';
+import { UserCheck, X } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 
 export interface AuthSession {
@@ -319,11 +319,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           </>
         )}
-
-        <div className="mt-6 flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-800 dark:text-amber-300">
-          <Lock aria-hidden="true" className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>{t.authModal.authNote}</span>
-        </div>
 
         <button
           type="button"
