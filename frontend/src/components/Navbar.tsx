@@ -3,12 +3,13 @@ import { Terminal, Moon, Sun, ShieldCheck, Menu, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useI18n } from '../context/I18nContext';
 import { TelemetryBadge } from './TelemetryBadge';
-import { AuthModal } from './AuthModal';
+import { AuthModal, readAuthSession, type AuthSession } from './AuthModal';
 
 export const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { locale, switchLocale, t, navigate, currentPath } = useI18n();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() => readAuthSession());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isRu = locale === 'ru';
   useEffect(() => {
@@ -157,11 +158,13 @@ export const Navbar: React.FC = () => {
               onClick={() => setIsAuthOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={isAuthOpen}
+              aria-label={authSession ? `${t.authModal.signedInAs} ${authSession.username}` : t.nav.signIn}
               className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white text-xs font-medium transition-all shadow-xs"
             >
               <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" />
-              <span className="hidden sm:inline">{t.nav.guestBadge}</span>
-              <span className="sm:hidden">{t.nav.signIn}</span>
+              <span className={authSession ? 'max-w-28 truncate' : ''}>
+                {authSession ? authSession.username : t.nav.signIn}
+              </span>
             </button>
           </div>
         </div>
@@ -199,7 +202,13 @@ export const Navbar: React.FC = () => {
       </header>
 
       {/* Auth / Guest Modal */}
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        session={authSession}
+        onAuthenticated={setAuthSession}
+        onSignedOut={() => setAuthSession(null)}
+      />
     </>
   );
 };
