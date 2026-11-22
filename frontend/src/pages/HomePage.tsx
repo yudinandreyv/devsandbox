@@ -234,7 +234,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* ACTIVE TRAINER CONTAINER */}
-          <div className="rounded-2xl border border-slate-700/80 bg-black p-6 sm:p-8 shadow-sm">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 dark:bg-slate-900/90 p-6 sm:p-8 shadow-sm">
             <DeferredMount minHeight={720}>
             <Suspense fallback={<TrainerFallback />}>
               {activeTrainer === 'sync-async' ? (

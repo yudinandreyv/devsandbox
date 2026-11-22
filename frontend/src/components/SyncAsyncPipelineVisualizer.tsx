@@ -378,7 +378,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
 
       {/* One settings panel and one live pipeline */}
       <div className="grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)] gap-4">
-        <SpotlightCard className="h-full border border-slate-700/80 bg-black backdrop-blur-sm">
+        <SpotlightCard className="h-full border border-slate-700/80 bg-slate-900/90 backdrop-blur-sm">
         <aside className="relative z-10 p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-white">{isRu ? 'Настройки опыта' : 'Experiment settings'}</h3>
@@ -482,7 +482,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
         </aside>
         </SpotlightCard>
 
-        <SpotlightCard className="min-w-0 border border-slate-700/80 bg-black backdrop-blur-sm">
+        <SpotlightCard className="min-w-0 border border-slate-700/80 bg-slate-900/90 backdrop-blur-sm">
         <section className="relative z-10 min-w-0 p-4 sm:p-5 space-y-4" aria-label={isRu ? 'Визуализация задач' : 'Task visualization'}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -584,7 +584,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
           </div>
 
           {/* Keep the load chart next to the live result it contextualizes. */}
-          <div className="border border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-3 bg-black" id="metrics-graph">
+          <div className="border border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-3 bg-slate-900/90" id="metrics-graph">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-cyan-400" />
