@@ -14,6 +14,6 @@ The simulator varies TABLESAMPLE size, the `created_at` time window, column proj
 - Bitmap Heap Scan combines multiple indexes for 10–25% selectivity.
 - `SELECT *` pulls wide TOAST objects into RAM and evicts hot index pages from `shared_buffers`.
 
-The safe read-only role `sandbox_readonly` enforces a 1500 ms `statement_timeout`; SQL is pre-validated with sqlglot before execution.
+The safe read-only role `sandbox_readonly` enforces a 1500 ms `statement_timeout`; SQL is pre-validated with pglast before execution.
 
 Source: https://gateaway.cloud/

@@ -120,6 +120,14 @@ export const PgXrayTrainer: React.FC = () => {
   const [copiedSql, setCopiedSql] = useState<boolean>(false);
   const [codeTab, setCodeTab] = useState<'python' | 'sql'>('python');
 
+  const handleCodeTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const nextTab = event.key === 'ArrowRight' || event.key === 'End' ? 'sql' : 'python';
+    setCodeTab(nextTab);
+    document.getElementById(`pg-xray-code-${nextTab}-tab`)?.focus();
+  };
+
   // Compute live SQL preview based on server template rules
   const generatedSql = useMemo(() => {
     const cols = columns === 'star' ? '*' : 'id, query_name, buffer_cost, created_at';
@@ -425,6 +433,9 @@ export const PgXrayTrainer: React.FC = () => {
             </div>
             <button
               type="button"
+              role="switch"
+              aria-checked={jsonbFilter}
+              aria-label={isRu ? 'Включить JSONB-фильтр containment' : 'Toggle JSONB containment filter'}
               onClick={() => {
                 setJsonbFilter(!jsonbFilter);
                 setActivePreset('');
@@ -884,10 +895,16 @@ export const PgXrayTrainer: React.FC = () => {
         {/* Right Column: Code Snippet with Tab Switcher (6 cols) */}
         <div className="lg:col-span-6 bg-slate-950 text-slate-200 p-5 rounded-2xl border border-slate-800 font-mono text-xs shadow-md space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" role="tablist" aria-label={isRu ? 'Примеры кода' : 'Code examples'}>
               <button
                 type="button"
+                role="tab"
+                id="pg-xray-code-python-tab"
+                aria-controls="pg-xray-code-python-panel"
+                aria-selected={codeTab === 'python'}
+                tabIndex={codeTab === 'python' ? 0 : -1}
                 onClick={() => setCodeTab('python')}
+                onKeyDown={handleCodeTabKeyDown}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
                   codeTab === 'python'
                     ? 'bg-brand-600 text-white shadow-xs'
@@ -898,7 +915,13 @@ export const PgXrayTrainer: React.FC = () => {
               </button>
               <button
                 type="button"
+                role="tab"
+                id="pg-xray-code-sql-tab"
+                aria-controls="pg-xray-code-sql-panel"
+                aria-selected={codeTab === 'sql'}
+                tabIndex={codeTab === 'sql' ? 0 : -1}
                 onClick={() => setCodeTab('sql')}
+                onKeyDown={handleCodeTabKeyDown}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
                   codeTab === 'sql'
                     ? 'bg-brand-600 text-white shadow-xs'
@@ -912,7 +935,13 @@ export const PgXrayTrainer: React.FC = () => {
           </div>
 
           {codeTab === 'python' ? (
-            <pre className="p-3 rounded-xl bg-slate-900/90 text-slate-300 overflow-x-auto text-[11px] leading-relaxed">
+            <pre
+              id="pg-xray-code-python-panel"
+              role="tabpanel"
+              aria-labelledby="pg-xray-code-python-tab"
+              tabIndex={0}
+              className="p-3 rounded-xl bg-slate-900/90 text-slate-300 overflow-x-auto text-[11px] leading-relaxed"
+            >
               <code>{`# ✅ Безопасный асинхронный замер в FastAPI
 async with db_pool.acquire() as conn:
     # 1. Защита от долгого Seq Scan
@@ -932,7 +961,13 @@ async with db_pool.acquire() as conn:
     shared_read = root_node.get("Shared Read Blocks", 0)`}</code>
             </pre>
           ) : (
-            <pre className="p-3 rounded-xl bg-slate-900/90 text-slate-300 overflow-x-auto text-[11px] leading-relaxed">
+            <pre
+              id="pg-xray-code-sql-panel"
+              role="tabpanel"
+              aria-labelledby="pg-xray-code-sql-tab"
+              tabIndex={0}
+              className="p-3 rounded-xl bg-slate-900/90 text-slate-300 overflow-x-auto text-[11px] leading-relaxed"
+            >
               <code>{`-- 1. Создание B-Tree индекса под диапазон дат
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_probe_created
 ON probe_queries (created_at DESC);
