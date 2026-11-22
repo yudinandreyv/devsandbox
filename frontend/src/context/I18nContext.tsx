@@ -13,28 +13,35 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Determine locale from URL path e.g. /ru/about or default to 'en'
-  const getInitialState = (): { locale: SupportedLocale; path: string } => {
-    const pathname = window.location.pathname;
-    const segments = pathname.split('/').filter(Boolean);
-    let detectedLocale: SupportedLocale = 'en';
-    let subpath = '';
+const LOCALE_STORAGE_KEY = 'dev_sandbox_locale';
 
-    if (segments[0] === 'ru' || segments[0] === 'en') {
-      detectedLocale = segments[0] as SupportedLocale;
-      subpath = '/' + segments.slice(1).join('/');
-    } else {
-      // Check saved preference or browser language
-      const saved = localStorage.getItem('dev_sandbox_locale');
-      if (saved === 'ru' || saved === 'en') {
-        detectedLocale = saved;
-      } else if (navigator.language.startsWith('ru')) {
-        detectedLocale = 'ru';
-      }
-      subpath = pathname === '/' ? '' : pathname;
+// Legacy URLs may still carry a /ru or /en prefix. Strip it so the address
+// bar stays clean while the locale is remembered separately.
+const splitLocalePrefix = (pathname: string): { locale: SupportedLocale | null; path: string } => {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments[0] === 'ru' || segments[0] === 'en') {
+    const path = '/' + segments.slice(1).join('/');
+    return { locale: segments[0] as SupportedLocale, path: path === '/' ? '' : path };
+  }
+  return { locale: null, path: pathname === '/' ? '' : pathname };
+};
+
+export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const getInitialState = (): { locale: SupportedLocale; path: string } => {
+    const { locale: pathLocale, path } = splitLocalePrefix(window.location.pathname);
+
+    if (pathLocale) {
+      return { locale: pathLocale, path };
     }
-    return { locale: detectedLocale, path: subpath };
+
+    let detectedLocale: SupportedLocale = 'en';
+    const saved = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (saved === 'ru' || saved === 'en') {
+      detectedLocale = saved;
+    } else if (navigator.language.startsWith('ru')) {
+      detectedLocale = 'ru';
+    }
+    return { locale: detectedLocale, path };
   };
 
   const [state, setState] = useState(getInitialState);
@@ -42,10 +49,10 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Ensure document lang attribute is set
     document.documentElement.lang = state.locale;
-    localStorage.setItem('dev_sandbox_locale', state.locale);
+    localStorage.setItem(LOCALE_STORAGE_KEY, state.locale);
 
-    // Sync window history URL if necessary
-    const targetUrl = `/${state.locale}${state.path === '/' ? '' : state.path}`;
+    // Keep the URL locale-free (also cleans legacy /ru and /en prefixes).
+    const targetUrl = state.path || '/';
     if (window.location.pathname !== targetUrl) {
       window.history.replaceState({}, '', targetUrl);
     }
@@ -53,17 +60,12 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const handlePopState = () => {
-      const pathname = window.location.pathname;
-      const segments = pathname.split('/').filter(Boolean);
-      const localeFromPath = segments[0] === 'ru' || segments[0] === 'en' ? segments[0] as SupportedLocale : state.locale;
-      const subpath = segments[0] === 'ru' || segments[0] === 'en'
-        ? '/' + segments.slice(1).join('/')
-        : pathname;
-      setState({ locale: localeFromPath, path: subpath === '/' ? '' : subpath });
+      const { locale: pathLocale, path } = splitLocalePrefix(window.location.pathname);
+      setState((prev) => ({ locale: pathLocale ?? prev.locale, path }));
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [state.locale]);
+  }, []);
 
   const switchLocale = (newLocale: SupportedLocale) => {
     setState((prev) => ({ ...prev, locale: newLocale }));
@@ -73,7 +75,7 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanPath = path.startsWith('/') ? path : '/' + path;
     const nextPath = cleanPath === '/' ? '' : cleanPath;
     setState((prev) => ({ ...prev, path: nextPath }));
-    window.history.pushState({}, '', `/${state.locale}${nextPath}`);
+    window.history.pushState({}, '', nextPath || '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
