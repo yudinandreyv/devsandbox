@@ -234,13 +234,15 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* ACTIVE TRAINER CONTAINER */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 dark:bg-slate-900/90 p-6 sm:p-8 shadow-sm">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/70 bg-white/65 dark:bg-slate-900/30 backdrop-blur-[2px] p-6 sm:p-8 shadow-sm">
             <DeferredMount minHeight={720}>
             <Suspense fallback={<TrainerFallback />}>
               {activeTrainer === 'sync-async' ? (
                 <div className="space-y-10">
                   {/* 1. INTERACTIVE PIPELINE VISUALIZER & 60FPS OSCILLOSCOPE */}
-                  <SyncAsyncPipelineVisualizer onRunBackendProbe={handleExecuteProbe} />
+                  <div className="-mx-6 -mt-6 sm:-mx-8 sm:-mt-8 rounded-t-2xl border-b border-slate-800 bg-slate-900 dark:bg-slate-900/90 px-6 py-6 sm:px-8 sm:py-8">
+                    <SyncAsyncPipelineVisualizer onRunBackendProbe={handleExecuteProbe} />
+                  </div>
 
                   {/* Expert Summary & Decision Matrix */}
                   <ExpertAnalysisTable />

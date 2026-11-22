@@ -119,7 +119,7 @@ spec:
         fsGroup: 101
       containers:
         - name: frontend
-          image: devsandbox-frontend:20261122-0125
+          image: devsandbox-frontend:20261122-0126
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
