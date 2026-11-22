@@ -1,13 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { TelemetryData, ExperimentRun } from '../types/telemetry';
 
 interface TelemetryContextType {
   telemetry: TelemetryData;
-  elapsedSeconds: number;
   recordExperiment: (run: Omit<ExperimentRun, 'id' | 'timestamp' | 'deltaPercentVsPrevious'>) => ExperimentRun;
   measurePing: () => Promise<number | null>;
   resetTelemetry: () => void;
-  resetSessionTimer: () => void;
   clearHistory: () => void;
 }
 
@@ -24,8 +22,6 @@ const generateUuid = () => {
 const TelemetryContext = createContext<TelemetryContextType | undefined>(undefined);
 
 export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-
   const [telemetry, setTelemetry] = useState<TelemetryData>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -55,34 +51,16 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   });
 
-  const timerRef = useRef<number | null>(null);
-
-  // Live stopwatch counter
+  // Defer the initial ping until the browser is idle so it never competes
+  // with the first paint of the static hero section.
   useEffect(() => {
-    timerRef.current = window.setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-      setTelemetry((prev) => {
-        const updated = {
-          ...prev,
-          sessionDurationSeconds: prev.sessionDurationSeconds + 1,
-        };
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch {
-          // Ignore
-        }
-        return updated;
-      });
-    }, 1000);
-
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(() => { measurePing(); }, { timeout: 2500 })
+      : window.setTimeout(() => { measurePing(); }, 1500);
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle as number);
+      else window.clearTimeout(idle as number);
     };
-  }, []);
-
-  // Measure initial ping
-  useEffect(() => {
-    measurePing();
   }, []);
 
   const measurePing = async (): Promise<number | null> => {
@@ -137,20 +115,6 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return fullRun;
   };
 
-  const resetSessionTimer = () => {
-    const resetAt = Date.now();
-    setElapsedSeconds(0);
-    setTelemetry((prev) => {
-      const updated = {
-        ...prev,
-        sessionStartTime: resetAt,
-        sessionDurationSeconds: 0,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      return updated;
-    });
-  };
-
   const clearHistory = () => {
     setTelemetry((prev) => {
       const updated = { ...prev, runsHistory: [] };
@@ -175,7 +139,6 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       runsHistory: [],
     };
     setTelemetry(fresh);
-    setElapsedSeconds(0);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
   };
 
@@ -183,11 +146,9 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     <TelemetryContext.Provider
       value={{
         telemetry,
-        elapsedSeconds,
         recordExperiment,
         measurePing,
         resetTelemetry,
-        resetSessionTimer,
         clearHistory,
       }}
     >

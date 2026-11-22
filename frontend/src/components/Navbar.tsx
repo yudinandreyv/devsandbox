@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Terminal, Moon, Sun, ShieldCheck } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useI18n } from '../context/I18nContext';
-import { Stopwatch } from './Stopwatch';
 import { TelemetryBadge } from './TelemetryBadge';
 import { AuthModal } from './AuthModal';
 
@@ -40,9 +39,8 @@ export const Navbar: React.FC = () => {
             </button>
           </div>
 
-          {/* Center: Live Session Stopwatch & LocalStorage Telemetry */}
+          {/* Center: LocalStorage Telemetry */}
           <div className="hidden md:flex items-center space-x-3">
-            <Stopwatch />
             <TelemetryBadge />
           </div>
 
@@ -122,9 +120,8 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Sub-bar for Stopwatch & Telemetry */}
-        <div className="flex md:hidden items-center justify-between px-4 py-1.5 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 text-xs">
-          <Stopwatch />
+        {/* Mobile Sub-bar for Telemetry */}
+        <div className="flex md:hidden items-center justify-end px-4 py-1.5 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 text-xs">
           <TelemetryBadge />
         </div>
       </header>

@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useI18n } from './context/I18nContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
-import { AboutPage } from './pages/AboutPage';
-import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
-import { TermsOfServicePage } from './pages/TermsOfServicePage';
-import { ContactPage } from './pages/ContactPage';
+
+const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
+
+const PageFallback: React.FC = () => (
+  <div className="min-h-[60vh] flex items-center justify-center text-xs font-mono text-slate-400" aria-busy="true">
+    Loading…
+  </div>
+);
 
 export const App: React.FC = () => {
   const { currentPath } = useI18n();
@@ -31,7 +38,7 @@ export const App: React.FC = () => {
     <div className="app-theme-shell min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
       <Navbar />
       <main className="flex-1 w-full">
-        {renderCurrentPage()}
+        <Suspense fallback={<PageFallback />}>{renderCurrentPage()}</Suspense>
       </main>
       <Footer />
     </div>

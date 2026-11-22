@@ -7,43 +7,7 @@ interface SpotlightCardProps {
 }
 
 export const SpotlightCard: React.FC<SpotlightCardProps> = ({ children, className = '' }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<number | null>(null);
-  const [isPointerInside, setIsPointerInside] = useState(false);
-
-  useEffect(() => () => {
-    if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
-  }, []);
-
-  const updateSpotlight = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== 'mouse' || frameRef.current !== null) return;
-    const x = event.clientX;
-    const y = event.clientY;
-    frameRef.current = window.requestAnimationFrame(() => {
-      const card = cardRef.current;
-      if (card) {
-        const bounds = card.getBoundingClientRect();
-        card.style.setProperty('--spotlight-x', `${x - bounds.left}px`);
-        card.style.setProperty('--spotlight-y', `${y - bounds.top}px`);
-      }
-      frameRef.current = null;
-    });
-  };
-
-  return (
-    <div
-      ref={cardRef}
-      onPointerMove={updateSpotlight}
-      onPointerEnter={(event) => {
-        if (event.pointerType === 'mouse') setIsPointerInside(true);
-      }}
-      onPointerLeave={() => setIsPointerInside(false)}
-      className={'spotlight-card relative rounded-2xl ' + className}
-    >
-      <div aria-hidden="true" className="spotlight-card__glow" style={{ opacity: isPointerInside ? 1 : 0 }} />
-      <div className="relative z-10">{children}</div>
-    </div>
-  );
+  return <div className={'relative rounded-2xl ' + className}>{children}</div>;
 };
 
 interface ParamWithTooltipProps {

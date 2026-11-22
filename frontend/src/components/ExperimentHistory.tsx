@@ -9,6 +9,10 @@ export const ExperimentHistory: React.FC = () => {
   const isRu = locale === 'ru';
 
   const history = telemetry.runsHistory || [];
+  const sessionSeconds = Math.max(
+    telemetry.sessionDurationSeconds,
+    Math.floor((Date.now() - telemetry.sessionStartTime) / 1000),
+  );
 
   if (history.length === 0) {
     return (
@@ -36,7 +40,7 @@ export const ExperimentHistory: React.FC = () => {
         <div>
           <span className="text-slate-500 block text-[11px]">{isRu ? 'Время в сессии:' : 'Session Time:'}</span>
           <span className="text-sm font-bold text-sky-600 dark:text-sky-400">
-            {Math.floor(telemetry.sessionDurationSeconds / 60)}m {telemetry.sessionDurationSeconds % 60}s
+            {Math.floor(sessionSeconds / 60)}m {sessionSeconds % 60}s
           </span>
         </div>
         <div>

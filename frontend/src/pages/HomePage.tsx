@@ -1,15 +1,52 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Sparkles, ShieldCheck, Database, Zap } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import { useTelemetry } from '../context/TelemetryContext';
-import { AdSlot } from '../components/AdSlot';
-import { VideoAdSlot } from '../components/VideoAdSlot';
-import { ExperimentHistory } from '../components/ExperimentHistory';
-import { PgXrayTrainer } from '../components/PgXrayTrainer';
-import BlueGreenTrainer from '../components/BlueGreenTrainer';
-import { SyncAsyncPipelineVisualizer } from '../components/SyncAsyncPipelineVisualizer';
-import { ExpertAnalysisTable } from '../components/ExpertAnalysisTable';
 import { SeoHead } from '../components/SeoHead';
+
+const AdSlot = lazy(() => import('../components/AdSlot').then((m) => ({ default: m.AdSlot })));
+const VideoAdSlot = lazy(() => import('../components/VideoAdSlot').then((m) => ({ default: m.VideoAdSlot })));
+const ExperimentHistory = lazy(() => import('../components/ExperimentHistory').then((m) => ({ default: m.ExperimentHistory })));
+const PgXrayTrainer = lazy(() => import('../components/PgXrayTrainer').then((m) => ({ default: m.PgXrayTrainer })));
+const BlueGreenTrainer = lazy(() => import('../components/BlueGreenTrainer'));
+const SyncAsyncPipelineVisualizer = lazy(() => import('../components/SyncAsyncPipelineVisualizer').then((m) => ({ default: m.SyncAsyncPipelineVisualizer })));
+const ExpertAnalysisTable = lazy(() => import('../components/ExpertAnalysisTable').then((m) => ({ default: m.ExpertAnalysisTable })));
+
+const TrainerFallback: React.FC = () => (
+  <div className="min-h-[720px] rounded-xl border border-dashed border-slate-300 dark:border-slate-800" aria-busy="true" />
+);
+
+// Mount heavy interactive content only when it is about to enter the viewport.
+const DeferredMount: React.FC<{ children: React.ReactNode; minHeight: number }> = ({ children, minHeight }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (visible) return;
+    const node = ref.current;
+    if (!node || typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px 0px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return (
+    <div ref={ref} style={{ minHeight: visible ? undefined : minHeight }}>
+      {visible ? children : null}
+    </div>
+  );
+};
 
 interface ScenarioMeta {
   id: string;
@@ -57,6 +94,26 @@ export const HomePage: React.FC = () => {
 
   // Trainer Navigation Tab ('sync-async' | 'pg-xray')
   const [activeTrainer, setActiveTrainer] = useState<'sync-async' | 'pg-xray' | 'blue-green'>('sync-async');
+
+  // Warm the inactive trainer/widget chunks while the browser is idle, so tab
+  // switches feel instant without delaying the first screen.
+  useEffect(() => {
+    const prefetch = () => {
+      void import('../components/PgXrayTrainer');
+      void import('../components/BlueGreenTrainer');
+      void import('../components/ExpertAnalysisTable');
+      void import('../components/ExperimentHistory');
+      void import('../components/AdSlot');
+      void import('../components/VideoAdSlot');
+    };
+    const idleCallback = window.requestIdleCallback?.bind(window);
+    if (idleCallback) {
+      const id = idleCallback(prefetch, { timeout: 3000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const id = window.setTimeout(prefetch, 2000);
+    return () => window.clearTimeout(id);
+  }, []);
 
   // The primary trainer owns both the local simulator and the live HTTP probe.
   const handleExecuteProbe = async (scenario: string, concurrency: number, delayMs: number) => {
@@ -178,34 +235,42 @@ export const HomePage: React.FC = () => {
 
           {/* ACTIVE TRAINER CONTAINER */}
           <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/70 bg-white/65 dark:bg-slate-900/30 backdrop-blur-[2px] p-6 sm:p-8 shadow-sm">
-            {activeTrainer === 'sync-async' ? (
-              <div className="space-y-10">
-                {/* 1. INTERACTIVE PIPELINE VISUALIZER & 60FPS OSCILLOSCOPE */}
-                <SyncAsyncPipelineVisualizer onRunBackendProbe={handleExecuteProbe} />
+            <DeferredMount minHeight={720}>
+            <Suspense fallback={<TrainerFallback />}>
+              {activeTrainer === 'sync-async' ? (
+                <div className="space-y-10">
+                  {/* 1. INTERACTIVE PIPELINE VISUALIZER & 60FPS OSCILLOSCOPE */}
+                  <SyncAsyncPipelineVisualizer onRunBackendProbe={handleExecuteProbe} />
 
-                {/* Expert Summary & Decision Matrix */}
-                <ExpertAnalysisTable />
+                  {/* Expert Summary & Decision Matrix */}
+                  <ExpertAnalysisTable />
 
-                {/* Experiment Log and Diff Comparison */}
-                <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800">
-                  <ExperimentHistory />
+                  {/* Experiment Log and Diff Comparison */}
+                  <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800">
+                    <ExperimentHistory />
+                  </div>
                 </div>
-              </div>
-            ) : activeTrainer === 'pg-xray' ? (
-              /* TRAINER 2: POSTGRESQL QUERY X-RAY */
-              <PgXrayTrainer />
-            ) : (
-              /* TRAINER 3: BLUE/GREEN CI/CD VISUALIZER */
-              <BlueGreenTrainer />
-            )}
+              ) : activeTrainer === 'pg-xray' ? (
+                /* TRAINER 2: POSTGRESQL QUERY X-RAY */
+                <PgXrayTrainer />
+              ) : (
+                /* TRAINER 3: BLUE/GREEN CI/CD VISUALIZER */
+                <BlueGreenTrainer />
+              )}
+            </Suspense>
+            </DeferredMount>
           </div>
         </section>
 
         {/* Leaderboard Ad Slot (CLS = 0) */}
-        <AdSlot type="leaderboard" variant="github" />
+        <Suspense fallback={<div className="min-h-[100px] my-6" aria-hidden="true" />}>
+          <AdSlot type="leaderboard" variant="github" />
+        </Suspense>
 
         {/* Video Ad / Rewarded Video Slot (CLS = 0) */}
-        <VideoAdSlot />
+        <Suspense fallback={<div className="min-h-[260px]" aria-hidden="true" />}>
+          <VideoAdSlot />
+        </Suspense>
 
         {/* 1,000+ Words Technical Deep-Dive (SEO & AI Citation) */}
         <article className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 sm:p-10 shadow-sm space-y-8 text-slate-800 dark:text-slate-200 leading-relaxed text-sm sm:text-base">
