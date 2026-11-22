@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Flame, RotateCcw, Activity, Zap, Server, ArrowRight, Pause } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
-import { useTheme } from '../context/ThemeContext';
 import { RangeSlider } from './RangeSlider';
 import { ParamWithTooltip, SpotlightCard } from './SpotlightCard';
 
@@ -32,9 +31,7 @@ interface PerformancePoint {
 
 export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBackendProbe }) => {
   const { locale } = useI18n();
-  const { theme } = useTheme();
   const isRu = locale === 'ru';
-  const isLightTheme = theme === 'light';
   // Mode configuration
   const [mode, setMode] = useState<ExecutionMode>('sync');
   const [trafficProfile, setTrafficProfile] = useState<TrafficProfile>('steady');
@@ -381,7 +378,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
 
       {/* One settings panel and one live pipeline */}
       <div className="grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)] gap-4">
-        <SpotlightCard className={'h-full border border-slate-700/80 backdrop-blur-sm ' + (isLightTheme ? 'bg-slate-900/90' : 'bg-slate-900/55')}>
+        <SpotlightCard className="h-full border border-slate-700/80 bg-black/80 backdrop-blur-sm">
         <aside className="relative z-10 p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-white">{isRu ? 'Настройки опыта' : 'Experiment settings'}</h3>
@@ -485,7 +482,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
         </aside>
         </SpotlightCard>
 
-        <SpotlightCard className={'min-w-0 border border-slate-700/80 backdrop-blur-sm ' + (isLightTheme ? 'bg-slate-900/85' : 'bg-slate-900/40')}>
+        <SpotlightCard className="min-w-0 border border-slate-700/80 bg-black/80 backdrop-blur-sm">
         <section className="relative z-10 min-w-0 p-4 sm:p-5 space-y-4" aria-label={isRu ? 'Визуализация задач' : 'Task visualization'}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -587,7 +584,7 @@ export const SyncAsyncPipelineVisualizer: React.FC<VisualizerProps> = ({ onRunBa
           </div>
 
           {/* Keep the load chart next to the live result it contextualizes. */}
-          <div className={'border rounded-2xl p-4 sm:p-5 space-y-3 ' + (isLightTheme ? 'bg-slate-950/90 border-slate-700/90' : 'bg-slate-900/50 border-slate-700/80')} id="metrics-graph">
+          <div className="border border-slate-700/80 rounded-2xl p-4 sm:p-5 space-y-3 bg-black/80" id="metrics-graph">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-cyan-400" />
