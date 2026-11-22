@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { HelpCircle } from 'lucide-react';
 
-const HOVER_DELAY_MS = 1200;
+const HOVER_DELAY_MS = 3000;
 
 interface SpotlightCardProps {
   children: React.ReactNode;
